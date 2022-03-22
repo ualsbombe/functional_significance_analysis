@@ -12,7 +12,7 @@ from sys import argv
 from helper_functions import should_we_run
 import mne
 
-def source_model(subject, overwrite):
+def this_function(subject, overwrite):
 
     subjects_dir = fname.subjects_dir
     
@@ -61,7 +61,8 @@ if submitting_method == 'hyades_frontend':
     queue = 'all.q'
     job_name = 'ana'
     n_jobs = 1
+    deps = ['mri']
 
 if submitting_method == 'hyades_backend':
     print(argv[:])
-    source_model(subject=argv[1], overwrite=bool(int(argv[2])))          
+    this_function(subject=argv[1], overwrite=bool(int(argv[3])))          

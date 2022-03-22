@@ -11,11 +11,11 @@ from config import (fname, submitting_method, evoked_fmin, evoked_fmax,
                     evoked_event_id, evoked_reject)
 
 from sys import argv
-from helper_functions import should_we_run
+from helper_functions import should_we_run, check_if_all_events_present
 
 import mne
 
-def evoked_epochs(subject, date, overwrite):
+def this_function(subject, date, overwrite):
     
     output_names = list()
     output_names.append(fname.evoked_epochs_no_proj(subject=subject,
@@ -40,6 +40,8 @@ def evoked_epochs(subject, date, overwrite):
                                                           fmin=evoked_fmin,
                                                           fmax=evoked_fmax))
             events = mne.read_events(fname.events(subject=subject, date=date))
+            event_id = check_if_all_events_present(events,
+                                                          evoked_event_id)
             if 'no_proj' in output_name:
                 proj = False
                 reject = None
@@ -47,7 +49,7 @@ def evoked_epochs(subject, date, overwrite):
                 proj = True
                 reject = evoked_reject
                 
-            epochs = mne.Epochs(raw, events, evoked_event_id,
+            epochs = mne.Epochs(raw, events, event_id,
                                 evoked_tmin, evoked_tmax, evoked_baseline,
                                 decim=evoked_decim, reject=reject,
                                 proj=proj)
@@ -56,9 +58,10 @@ def evoked_epochs(subject, date, overwrite):
             
 if submitting_method == 'hyades_frontend':
     queue = 'highmem.q'
-    job_name = 'epo'
+    job_name = 'eepo'
     n_jobs = 2
+    deps = ['eve', 'efilt']
 
 if submitting_method == 'hyades_backend':
     print(argv[:])
-    evoked_epochs(subject=argv[1], date=argv[2], overwrite=argv[3])            
+    this_function(subject=argv[1], date=argv[2], overwrite=bool(int(argv[3])))            

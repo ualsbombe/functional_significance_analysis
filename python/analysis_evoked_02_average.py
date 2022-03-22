@@ -14,7 +14,7 @@ from helper_functions import should_we_run, collapse_event_id
 
 import mne
 
-def evoked_average(subject, date, overwrite):
+def this_function(subject, date, overwrite):
     
     output_names = list()
     output_names.append(fname.evoked_average_no_proj(subject=subject,
@@ -24,7 +24,7 @@ def evoked_average(subject, date, overwrite):
                                                     tmin=evoked_tmin,
                                                     tmax=evoked_tmax))
                         
-    output_names.append(fname.evoked_average_proj(   subject=subject,
+    output_names.append(fname.evoked_average_proj(subject=subject,
                                                     date=date,
                                                     fmin=evoked_fmin,
                                                     fmax=evoked_fmax,
@@ -58,9 +58,10 @@ def evoked_average(subject, date, overwrite):
             
 if submitting_method == 'hyades_frontend':
     queue = 'all.q'
-    job_name = 'ave'
+    job_name = 'eave'
     n_jobs = 1
+    deps = ['eve', 'efilt', 'eepo']
 
 if submitting_method == 'hyades_backend':
     print(argv[:])
-    evoked_average(subject=argv[1], date=argv[2], overwrite=bool(int(argv[3])))              
+    this_function(subject=argv[1], date=argv[2], overwrite=bool(int(argv[3])))            

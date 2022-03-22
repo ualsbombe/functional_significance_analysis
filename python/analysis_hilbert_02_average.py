@@ -7,14 +7,14 @@ Created on Mon May 10 15:55:44 2021
 """
 
 from config import (fname, submitting_method, hilbert_fmins, hilbert_fmaxs,
-                    hilbert_tmin, hilbert_tmax, hilbert_collapsed_event_id)
+                    hilbert_tmin, hilbert_tmax, collapsed_event_id)
 
 from sys import argv
-from helper_functions import should_we_run
+from helper_functions import should_we_run, collapse_event_id
 
 import mne
 
-def hilbert_average(subject, date, overwrite):
+def this_function(subject, date, overwrite):
     
     for hilbert_fmin, hilbert_fmax in zip(hilbert_fmins, hilbert_fmaxs):
     
@@ -53,11 +53,7 @@ def hilbert_average(subject, date, overwrite):
                     hilbert_evokeds.append(epochs[event].average())
                     
                 ## combined values
-                for collapsed_event_id in hilbert_collapsed_event_id:
-                    mne.epochs.combine_event_ids(epochs,
-             hilbert_collapsed_event_id[collapsed_event_id]['old_event_ids'],
-             hilbert_collapsed_event_id[collapsed_event_id]['new_event_id'],
-                                             copy=False)
+                epochs = collapse_event_id(epochs, collapsed_event_id)
                 for event in epochs.event_id:
                     if epochs.event_id[event] > 80: # trials with a response
                         hilbert_evokeds.append(epochs[event].average())                    
@@ -69,8 +65,8 @@ if submitting_method == 'hyades_frontend':
     queue = 'highmem.q'
     job_name = 'have'
     n_jobs = 3
+    deps = ['eve', 'hfilt', 'hepo']
 
 if submitting_method == 'hyades_backend':
     print(argv[:])
-    hilbert_average(subject=argv[1], date=argv[2],
-                    overwrite=bool(int(argv[3])))
+    this_function(subject=argv[1], date=argv[2], overwrite=bool(int(argv[3])))            

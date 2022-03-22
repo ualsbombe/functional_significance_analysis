@@ -19,7 +19,7 @@ import numpy as np
 
 # hilbert_lcmv_contrasts = hilbert_lcmv_contrasts[-1:]
 
-def beamformer_contrast(subject, date, overwrite):
+def this_function(subject, date, overwrite):
     
     for (fmin, fmax) in zip(hilbert_fmins, hilbert_fmaxs):
         raw_loaded = False
@@ -87,7 +87,8 @@ def beamformer_contrast(subject, date, overwrite):
                 
                 ## make forward model on the fly (only first time)
                 if not raw_loaded:
-                    trans = fname.anatomy_transformation(subject=subject)
+                    trans = fname.anatomy_transformation(subject=subject,
+                                                         date=date)
                     src = fname.anatomy_volumetric_source_space(
                                                         subject=subject,
                                                         spacing=src_spacing)
@@ -167,11 +168,12 @@ def beamformer_contrast(subject, date, overwrite):
         del stcs, stcs_dict, ratio_stc
         
 if submitting_method == 'hyades_frontend':
-    queue = 'highmem.q'
+    queue = 'long.q'
     job_name = 'hlcmv'
-    n_jobs = 3
+    n_jobs = 8
+    deps = ['eve', 'hfilt', 'hepo', 'have', 'mri', 'ana', 'fwd']
+
 
 if submitting_method == 'hyades_backend':
     print(argv[:])
-    beamformer_contrast(subject=argv[1], date=argv[2],
-                        overwrite=bool(int(argv[3])))              
+    this_function(subject=argv[1], date=argv[2], overwrite=bool(int(argv[3])))                        

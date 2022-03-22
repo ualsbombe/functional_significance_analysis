@@ -6,23 +6,29 @@ Created on Fri May  7 16:37:48 2021
 @author: lau
 """
 
-from config import fname, submitting_method, evoked_fmin, evoked_fmax
+from config import (fname, submitting_method, evoked_fmin, evoked_fmax,
+                    split_recording_subjects, bad_channels)
 from sys import argv
-from helper_functions import should_we_run
+from helper_functions import should_we_run, read_split_raw
 
 import mne
 
-def evoked_filter(subject, date, overwrite):
+def this_function(subject, date, overwrite):
 
     
     output_name = fname.evoked_filter(subject=subject, date=date,
                                       fmin=evoked_fmin, fmax=evoked_fmax)
-    # figure_name = fname.events_plot(raw_filename=raw_filename, subject=subject,
-                                    # date=date)
+   
     if should_we_run(output_name, overwrite):
-        raw = mne.io.read_raw_fif(fname.raw_file(subject=subject,
-                                                 date=date), preload=True)
-    
+        if subject in split_recording_subjects:
+            raw = read_split_raw(subject, date)
+        else:
+            raw = mne.io.read_raw_fif(fname.raw_file(subject=subject,
+                                                     date=date), preload=True)
+        
+        
+        raw.info['bads'] = bad_channels[subject]
+        
         if evoked_fmin is None:
             l_freq = None
             h_freq = evoked_fmax
@@ -40,7 +46,8 @@ if submitting_method == 'hyades_frontend':
     queue = 'highmem.q'
     job_name = 'efilt'
     n_jobs = 2
+    deps = None
 
 if submitting_method == 'hyades_backend':
     print(argv[:])
-    evoked_filter(subject=argv[1], date=argv[2], overwrite=argv[3])
+    this_function(subject=argv[1], date=argv[2], overwrite=bool(int(argv[3])))            

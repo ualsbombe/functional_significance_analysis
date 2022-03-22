@@ -8,28 +8,29 @@ Created on Tue May 25 11:28:54 2021
 
 from config import (fname, submitting_method, evoked_lcmv_contrasts,
                     evoked_lcmv_weight_norm, evoked_lcmv_regularization,
-                    evoked_lcmv_picks, evoked_tmin, evoked_tmax, evoked_proj,
+                    evoked_lcmv_picks, evoked_lcmv_proj,
+                    evoked_tmin, evoked_tmax,
                     evoked_fmin, evoked_fmax,
                     bad_channels, collapsed_event_id, src_spacing, bem_ico)
 from sys import argv
 from helper_functions import should_we_run, collapse_event_id
 
 import mne
-#FIXME: Run without a common filter
-## (0003 has a strong cerebellar response without) 
 
-def beamformer_contrast(subject, date, overwrite):
+
+def this_function(subject, date, overwrite):
     raw_loaded = False
     for this_contrast in evoked_lcmv_contrasts:
         output_name = \
-            fname.source_evoked_beamformer_contrast(subject=subject,
-                                                    date=date,
-                                                    fmin=evoked_fmin,
-                                                    fmax=evoked_fmax,
-                                                    tmin=evoked_tmin,
-                                                    tmax=evoked_tmax,
-                                                    first_event='',
-                                                    second_event='',
+            fname.source_evoked_beamformer_contrast(
+                                                subject=subject,
+                                                date=date,
+                                                fmin=evoked_fmin,
+                                                fmax=evoked_fmax,
+                                                tmin=evoked_tmin,
+                                                tmax=evoked_tmax,
+                                                first_event=this_contrast[0],
+                                                second_event=this_contrast[1],
                                                 reg=evoked_lcmv_regularization)
         if should_we_run(output_name, overwrite):
             if not raw_loaded:
@@ -73,7 +74,7 @@ def beamformer_contrast(subject, date, overwrite):
                     
             epochs_cov = mne.Epochs(raw, events, new_event_id,
                                     evoked_tmin, evoked_tmax, baseline,
-                                    proj=evoked_proj, preload=True,
+                                    proj=evoked_lcmv_proj, preload=True,
                                     picks=picks)
             
             ## remove projs
@@ -83,7 +84,8 @@ def beamformer_contrast(subject, date, overwrite):
             
             ## make forward model on the fly (only first time)
             if not raw_loaded:
-                trans = fname.anatomy_transformation(subject=subject)
+                trans = fname.anatomy_transformation(subject=subject,
+                                                     date=date)
                 src = fname.anatomy_volumetric_source_space(
                                                     subject=subject,
                                                     spacing=src_spacing)
@@ -97,7 +99,6 @@ def beamformer_contrast(subject, date, overwrite):
             
             data_cov = mne.compute_covariance(epochs_cov, tmin=0,
                                               tmax=evoked_tmax, rank=rank)
-            ##FIXME: should we NOT use common filters?
             filters = mne.beamformer.make_lcmv(epochs_cov.info, fwd,
                                                data_cov,
                                                pick_ori='max-power',
@@ -118,7 +119,14 @@ def beamformer_contrast(subject, date, overwrite):
                     fmin=evoked_fmin, fmax=evoked_fmax,
                     tmin=evoked_tmin, tmax=evoked_tmax), proj=False,
                     condition=event)
-                evoked.info['bads'] = bad_channels[subject]
+                # can't add eog and ecg - so remove these
+                bad_channels_evoked = bad_channels[subject].copy()
+                remove_these = ['EOG001', 'EOG002', 'ECG003']
+                for remove_this in remove_these:
+                    if remove_this in bad_channels_evoked:
+                        bad_channels_evoked.remove(remove_this)
+                ## ended
+                evoked.info['bads'] = bad_channels_evoked
                 evoked.del_proj()
                 evoked.pick_types(meg=evoked_lcmv_picks)
                 
@@ -159,9 +167,9 @@ def beamformer_contrast(subject, date, overwrite):
 if submitting_method == 'hyades_frontend':
     queue = 'highmem.q'
     job_name = 'elcmv'
-    n_jobs = 3
+    n_jobs = 4
+    deps = ['eve', 'efilt', 'eepo', 'eave', 'mri', 'ana', 'fwd']
 
 if submitting_method == 'hyades_backend':
     print(argv[:])
-    beamformer_contrast(subject=argv[1], date=argv[2],
-                        overwrite=bool(int(argv[3])))                      
+    this_function(subject=argv[1], date=argv[2], overwrite=bool(int(argv[3])))                                 

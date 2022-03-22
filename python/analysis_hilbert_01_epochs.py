@@ -11,11 +11,11 @@ from config import (fname, submitting_method, hilbert_fmins, hilbert_fmaxs,
                     hilbert_event_id, hilbert_reject)
 
 from sys import argv
-from helper_functions import should_we_run
+from helper_functions import should_we_run, check_if_all_events_present
 
 import mne
 
-def hilbert_epochs(subject, date, overwrite):
+def this_function(subject, date, overwrite):
     
     for hilbert_fmin, hilbert_fmax in zip(hilbert_fmins, hilbert_fmaxs):
 
@@ -46,6 +46,8 @@ def hilbert_epochs(subject, date, overwrite):
                 raw.apply_hilbert(envelope=False)
                 events = mne.read_events(fname.events(subject=subject,
                                                       date=date))
+                event_id = check_if_all_events_present(events,
+                                                          hilbert_event_id)
                 if 'no_proj' in output_name:
                     proj = False
                     reject = None
@@ -53,7 +55,7 @@ def hilbert_epochs(subject, date, overwrite):
                     proj = True
                     reject = hilbert_reject
                     
-                epochs = mne.Epochs(raw, events, hilbert_event_id,
+                epochs = mne.Epochs(raw, events, event_id,
                                     hilbert_tmin, hilbert_tmax,
                                     hilbert_baseline,
                                     reject=reject,
@@ -67,8 +69,8 @@ if submitting_method == 'hyades_frontend':
     queue = 'highmem.q'
     job_name = 'hepo'
     n_jobs = 4
+    deps = ['eve', 'hfilt']
 
 if submitting_method == 'hyades_backend':
     print(argv[:])
-    hilbert_epochs(subject=argv[1], date=argv[2], overwrite=argv[3])   
-    
+    this_function(subject=argv[1], date=argv[2], overwrite=bool(int(argv[3])))                

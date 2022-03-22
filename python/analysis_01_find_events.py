@@ -6,27 +6,28 @@ Created on Thu May  6 12:34:28 2021
 @author: lau
 """
 
-from config import fname, submitting_method, behavioural_data_time_stamps
+from config import (fname, submitting_method, behavioural_data_time_stamps,
+                    split_recording_subjects, subjects_missing_n_trials)
 from sys import argv
-from helper_functions import should_we_run
+from helper_functions import should_we_run, read_split_raw
 
 import mne
 import numpy as np
 
 
-def find_events(subject, date, raw_filename, overwrite):
+def this_function(subject, date, overwrite):
     output_name = fname.events(subject=subject, date=date)
     figure_name = fname.events_plot(subject=subject, date=date)
     if should_we_run(output_name, overwrite):
-        if raw_filename == 'trigger_test':
-            raw = mne.io.read_raw_fif(fname.trigger_test(subject=subject,
-                                                         date=date))
-        elif raw_filename == 'func_cerebellum':
+
+        if subject in split_recording_subjects:
+            raw = read_split_raw(subject, date)
+        else:
             raw = mne.io.read_raw_fif(fname.raw_file(subject=subject,
-                                                         date=date))
+                                                     date=date))
             
-        subject_code= raw.info['subject_info']['last_name'] + '_' + \
-                      raw.info['subject_info']['first_name']
+        subject_code = raw.info['subject_info']['last_name'] + '_' + \
+                       raw.info['subject_info']['first_name']
         date_short = date[:-7]
         date_short = date_short[:4] + '_' + date_short[4:6] + '_' + \
             date_short[6:]
@@ -43,6 +44,11 @@ def find_events(subject, date, raw_filename, overwrite):
                                  usecols=0, delimiter=',')
         responses = np.genfromtxt(behavioural_data_file, skip_header=1,
                                   usecols=2, delimiter=',', dtype=str)
+        
+        if subject in subjects_missing_n_trials:
+            n_trials = subjects_missing_n_trials[subject]
+            triggers = triggers[n_trials:]
+            responses = responses[n_trials:]
         
         for trigger_index, trigger in enumerate(triggers):
             ## 2**8 is correct; 2**9 is incorrect
@@ -69,12 +75,14 @@ def find_events(subject, date, raw_filename, overwrite):
         fig = mne.viz.plot_events(events)
         fig.savefig(figure_name)
         
+        
+        
 if submitting_method == 'hyades_frontend':
-    queue = 'all.q'
+    queue = 'highmem.q'
     job_name = 'eve'
-    n_jobs = 1
+    n_jobs = 2
+    deps = None
 
 if submitting_method == 'hyades_backend':
     print(argv[:])
-    find_events(subject=argv[1], date=argv[2], raw_filename=argv[3],
-                overwrite=argv[4])
+    this_function(subject=argv[1], date=argv[2], overwrite=bool(int(argv[3])))

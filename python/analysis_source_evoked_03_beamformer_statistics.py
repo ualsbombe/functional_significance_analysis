@@ -106,7 +106,7 @@ if submitting_method == 'hyades_frontend':
     job_name = 'estatlcmv'
     n_jobs = evoked_lcmv_stat_n_jobs
     deps = ['eve', 'efilt', 'eepo', 'eave', 'mri', 'ana', 'fwd', 'elcmv',
-            'melcmv']
+            'emlcmv']
     
 if submitting_method == 'hyades_backend':
     print(argv[:])

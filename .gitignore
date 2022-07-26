@@ -1,3 +1,5 @@
 python/qsub/
 python/__pycache__/
+*.pyc
+playing_with*
 

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 28 11:40:18 2022
+Created on Thu Feb 17 17:15:38 2022
 
 @author: lau
 """
-
 
 from config import (fname, submitting_method, src_spacing,
                     hilbert_lcmv_contrasts, hilbert_lcmv_regularization,
@@ -17,19 +16,19 @@ from helper_functions import should_we_run
 import mne
 
 def this_function(subject, date, overwrite):
-    morph_name = fname.anatomy_simnibs_morph_volume(subject=subject,
+    morph_name = fname.anatomy_morph_volume(subject=subject,
                                             spacing=src_spacing)
     morph = mne.read_source_morph(morph_name)
     for (fmin, fmax) in zip(hilbert_fmins, hilbert_fmaxs):
         for this_contrast in hilbert_lcmv_contrasts:
-            #FIXME: should be run on whole list below
+        
             for hilbert_lcmv_weight_norm in hilbert_lcmv_weight_norms:
                 for bem_conductivity in bem_conductivities:
                     n_layers = len(bem_conductivity)
                     input_names = list()
                     ## contrast 
                     input_names.append(
-                        fname.source_hilbert_beamformer_contrast_simnibs(
+                        fname.source_hilbert_beamformer_contrast(
                                         subject=subject,
                                         date=date,
                                         fmin=fmin,
@@ -43,7 +42,7 @@ def this_function(subject, date, overwrite):
                                         n_layers=n_layers))
                     ## first and second events
                     for event in this_contrast:
-                        input_names.append(fname.source_hilbert_beamformer_simnibs(
+                        input_names.append(fname.source_hilbert_beamformer(
                                             subject=subject,
                                             date=date,
                                             fmin=fmin,
@@ -60,7 +59,7 @@ def this_function(subject, date, overwrite):
                     output_names = list()
                     ## contrast
                     output_names.append(
-                        fname.source_hilbert_beamformer_contrast_simnibs_morph(
+                        fname.source_hilbert_beamformer_contrast_morph(
                                         subject=subject,
                                         date=date,
                                         fmin=fmin,
@@ -75,7 +74,7 @@ def this_function(subject, date, overwrite):
                     ## first and second events
                     for event in this_contrast:
                         output_names.append(
-                            fname.source_hilbert_beamformer_simnibs_morph(
+                            fname.source_hilbert_beamformer_morph(
                                             subject=subject,
                                             date=date,
                                             fmin=fmin,

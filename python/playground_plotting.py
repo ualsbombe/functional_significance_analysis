@@ -18,7 +18,7 @@ src = None
 #%% plot masked t values
 
 tstc = stc.copy()
-tstc.crop(0.000, None)
+tstc.crop(-0.200, 0.200)
 
 t_obs = clu['t_obs']
 clusters = clu['clusters']
@@ -29,7 +29,7 @@ tstc._data = t_obs.T
 mstc = tstc.copy()
 mstc._data = np.zeros(tstc.shape)
 
-p_threshold = 0.05
+p_threshold = 0.09
 
 sig_indices = np.where(cluster_p_values < p_threshold)[0]
 
@@ -40,4 +40,4 @@ if sig_indices.size != 0:
         mstc._data[cluster[1], cluster[0]] = \
             tstc.data[cluster[1], cluster[0]]
 
-mstc.plot(src)
+mstc.plot(src, initial_time=0)

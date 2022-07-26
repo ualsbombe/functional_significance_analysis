@@ -42,9 +42,9 @@ recordings = [
     # dict(subject='0028', date='20210817_000000', mr_date='20210820_111354'),
     # dict(subject='0029', date='20210817_000000', mr_date='20210820_103315'),
     # dict(subject='0030', date='20210817_000000', mr_date='20210820_085929'),
-    # dict(subject='0031', date='20210825_000000', mr_date='20210820_094714'),
-    dict(subject='fsaverage', date='20210825_000000', mr_date=None)
-             ]
+    # # dict(subject='0031', date='20210825_000000', mr_date='20210820_094714'),
+    # dict(subject='fsaverage', date='20210825_000000', mr_date=None)
+              ]
 
 functions = [
                ## GENERAL
@@ -59,6 +59,11 @@ functions = [
                 # 'analysis_evoked_01_epochs',
                 # 'analysis_evoked_02_average',
                 # 'analysis_evoked_03_grand_average',
+                
+               ## TFR ANALYSIS
+                # 'analysis_tfr_00_epochs',
+                # 'analysis_tfr_01_average',
+                # 'analysis_tfr_02_grand_average',
               
                ## HILBERT ANALYSIS
                 # 'analysis_hilbert_00_filter',
@@ -69,9 +74,8 @@ functions = [
                 # 'analysis_hilbert_05_statistics',
                 
                ## ANATOMY PROCESSING      
-                # 'analysis_anatomy_00_import_reconstruct_watershed_' + \
-                # 'and_scalp_surfaces',
-                # 'analysis_anatomy_01_source_model',
+                # 'analysis_anatomy_00_segmentation',# must be run from simnibs_env
+                # 'analysis_anatomy_01_bem', # --same as above--
                 # 'analysis_anatomy_02_forward_model',
                   
                ## SOURCE EVOKED
@@ -80,11 +84,15 @@ functions = [
                 # 'analysis_source_evoked_02_beamformer_grand_average',
                 # 'analysis_source_evoked_03_beamformer_statistics',
                 
+                
                ## SOURCE HILBERT
                 # 'analysis_source_hilbert_00_beamformer_contrast',
                 # 'analysis_source_hilbert_01_morph_beamformer_contrast',
                 # 'analysis_source_hilbert_02_beamformer_grand_average',
-                'analysis_source_hilbert_03_beamformer_statistics',
+                # 'analysis_source_hilbert_03_beamformer_statistics',
+                # 'analysis_source_hilbert_04_beamformer_labels',
+                # 'analysis_source_hilbert_05_beamformer_grand_average_labels',
+
                 
             ]
 

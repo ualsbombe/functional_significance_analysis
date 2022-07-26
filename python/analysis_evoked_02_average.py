@@ -54,12 +54,12 @@ def this_function(subject, date, overwrite):
                 if epochs.event_id[event] > 80: # trials with a response
                     evokeds.append(epochs[event].average())
                 
-            mne.write_evokeds(output_name, evokeds)
+            mne.write_evokeds(output_name, evokeds, overwrite=overwrite)
             
 if submitting_method == 'hyades_frontend':
     queue = 'all.q'
     job_name = 'eave'
-    n_jobs = 1
+    n_jobs = 3
     deps = ['eve', 'efilt', 'eepo']
 
 if submitting_method == 'hyades_backend':

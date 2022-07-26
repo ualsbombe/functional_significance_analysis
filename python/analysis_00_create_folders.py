@@ -26,10 +26,15 @@ def this_function(subject, date, overwrite):
                                                     exist_ok=exist_ok)
     makedirs(fname.subject_beamformer_evoked_path(subject=subject, date=date),
                                                      exist_ok=exist_ok)
+    makedirs(fname.subject_beamformer_hilbert_labels_path(subject=subject,
+                                                          date=date),
+                                                          exist_ok=exist_ok)
+    makedirs(fname.subject_simnibs_path(subject=subject, date=date),
+             exist_ok=exist_ok)
 
 
 if submitting_method == 'hyades_frontend':
-    queue = 'all.q'
+    queue = 'short.q'
     job_name = 'cf'
     n_jobs = 1
     deps = None

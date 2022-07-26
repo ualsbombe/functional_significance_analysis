@@ -116,7 +116,9 @@ def wait_submit(subject, deps, check_duration=10):
                 else:
                     break 
                     
-        
+## links are removed and recreated (updating them)
+## in the scripts/python/qsub library where they will be retrieved from
+## when submitting the job in "submit_job" below
 def update_links_in_qsub():
     python_path = fname.python_path
     qsub_path = fname.python_qsub_path
@@ -125,13 +127,13 @@ def update_links_in_qsub():
     script_names = listdir(python_path)
     for script_name in script_names:
         if 'analysis' in script_name:
-            sleep(0.01)
+            sleep(0.1)
             ## clean
             command = ['rm', join(qsub_path, script_name)]
             run_process_and_write_output(command, subjects_dir=None,
                                          write_output=False)
             ## create link
-            sleep(0.01)
+            sleep(0.1)
             command = ['ln', '-sf', join(python_path, script_name), 
                  join(qsub_path, script_name)]
             run_process_and_write_output(command, subjects_dir=None,
@@ -164,7 +166,8 @@ def submit_job(recording, function_name, overwrite=False, wait=True):
         
         if function_name == \
             'analysis_anatomy_00_import_reconstruct_watershed_' + \
-                'and_scalp_surfaces':
+                'and_scalp_surfaces' \
+            or function_name == 'analysis_anatomy_00a_simnibs':
             date = mr_date
                 
         

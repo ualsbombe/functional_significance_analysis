@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun 27 15:59:55 2022
+Created on Wed Feb 16 13:56:30 2022
 
 @author: lau
 """
-
 
 from config import (fname, submitting_method, evoked_lcmv_contrasts,
                     evoked_lcmv_regularization, evoked_lcmv_weight_norms,
                     evoked_tmin, evoked_tmax,
                     evoked_fmin, evoked_fmax, 
-                    recordings, bad_subjects,
-                    subjects_with_no_BEM_simnibs,
-                    bem_conductivities)
+                    recordings, bad_subjects, bem_conductivities,
+                    subjects_with_no_3_layer_BEM_watershed)
 from sys import argv
 from helper_functions import should_we_run
 import mne
@@ -25,8 +23,8 @@ def this_function(subject, date, overwrite):
             for evoked_lcmv_weight_norm in evoked_lcmv_weight_norms:
                 for bem_conductivity in bem_conductivities:
                     n_layers = len(bem_conductivity)
-                    output_name = \
-                        fname.source_evoked_beamformer_grand_average_simnibs(
+
+                    output_name = fname.source_evoked_beamformer_grand_average(
                         subject=subject, date=date, fmin=evoked_fmin, 
                         fmax=evoked_fmax,
                         tmin=evoked_tmin, tmax=evoked_tmax,
@@ -42,13 +40,14 @@ def this_function(subject, date, overwrite):
                         for recording_index,recording in enumerate(recordings):
                             subject_name = recording['subject']
                             if subject_name in bad_subjects or \
-                                (subject_name in subjects_with_no_BEM_simnibs):
+        (subject_name in subjects_with_no_3_layer_BEM_watershed and \
+         n_layers == 3):
                                 continue # skip the subject
                             subject_counter += 1
                             date = recording['date']
                             
                             lcmv = mne.read_source_estimate(
-                                fname.source_evoked_beamformer_simnibs_morph(
+                                fname.source_evoked_beamformer_morph(
                             subject=subject_name,date=date,
                             fmin=evoked_fmin, fmax=evoked_fmax,
                             tmin=evoked_tmin,
@@ -72,7 +71,7 @@ if submitting_method == 'hyades_frontend':
     job_name = 'elcmvga'
     n_jobs = 4
     deps = ['eve', 'efilt', 'eepo', 'eave', 'mri', 'ana', 'fwd', 'elcmvlala',
-            'emlcmvlala', 'snibslala', 'snbemlala']
+            'emlcmvlala']
     
 if submitting_method == 'hyades_backend':
     print(argv[:])

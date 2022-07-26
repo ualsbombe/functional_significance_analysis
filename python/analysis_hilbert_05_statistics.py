@@ -71,13 +71,22 @@ def this_function(subject, date, overwrite):
                                                      this_data),
                                                     axis=0)
         
+                print(stat_array.shape)
                 n_subjects = stat_array.shape[0]
-                # n_times = stat_array.shape[1]
                 
+                grand_average = mne.read_evokeds(
+                    fname.hilbert_grand_average_proj(subject=subject,
+                                                     date=date,
+                                                     fmin=fmin,
+                                                     fmax=fmax,
+                                                     tmin=hilbert_tmin,
+                                                     tmax=hilbert_tmax))[0]
                 
-                # connectivity = mne.spatio_temporal_src_adjacency(src,
-                # n_times,
-                #                               hilbert_stat_connectivity_dist)
+                ch_adjacency, ch_names = \
+                    mne.channels.find_ch_adjacency(grand_average.info,
+                                               ch_type=hilbert_stat_channels)                
+                
+
                 
                 threshold = -stats.distributions.t.ppf(hilbert_stat_p / 2.0,
                                                        n_subjects)
@@ -88,7 +97,7 @@ def this_function(subject, date, overwrite):
                         n_permutations=hilbert_stat_n_permutations,
                         n_jobs=hilbert_stat_n_jobs,
                         seed=hilbert_stat_seed,
-                        adjacency=None)
+                        adjacency=ch_adjacency)
                     
                 cluster_dict = dict()
                 names = ['t_obs', 'clusters', 'cluster_p_values', 'H0']

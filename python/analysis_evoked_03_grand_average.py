@@ -7,7 +7,8 @@ Created on Thu Sep 16 15:24:43 2021
 """
 
 from config import (fname, submitting_method, evoked_fmin, evoked_fmax,
-                    evoked_tmin, evoked_tmax, recordings, bad_subjects)
+                    evoked_tmin, evoked_tmax, recordings, bad_subjects,
+                    subjects_with_no_BEM_simnibs)
 from sys import argv
 from helper_functions import should_we_run
 import mne
@@ -22,6 +23,7 @@ def this_function(subject, date, overwrite):
                                                           fmax=evoked_fmax,
                                                           tmin=evoked_tmin,
                                                           tmax=evoked_tmax))
+    ## FIXME: non-interpolated doesn't work
     output_names.append(fname.evoked_grand_average_proj(subject=subject,
                                                         date=date,
                                                         fmin=evoked_fmin,
@@ -35,7 +37,8 @@ def this_function(subject, date, overwrite):
             ## sort files
             for recording_index, recording in enumerate(recordings):
                 subject = recording['subject']
-                if subject in bad_subjects:
+                if subject in bad_subjects or \
+                    subject in subjects_with_no_BEM_simnibs:
                     continue ## skip the subject
                 date = recording['date']
                 evokeds = mne.read_evokeds(fname.evoked_average_proj(
@@ -67,13 +70,13 @@ def this_function(subject, date, overwrite):
                     grand_average_evoked
                 grand_averages.append(grand_average)
                 
-            mne.write_evokeds(output_name, grand_averages)
+            mne.write_evokeds(output_name, grand_averages, overwrite=overwrite)
             
             
 if submitting_method == 'hyades_frontend':
     queue = 'all.q'
     job_name = 'egave'
-    n_jobs = 1
+    n_jobs = 3
     deps = ['eve', 'efilt', 'eepo', 'eave']
     
 if submitting_method == 'hyades_backend':

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 28 12:13:32 2022
+Created on Thu Feb 17 17:30:19 2022
 
 @author: lau
 """
@@ -10,8 +10,8 @@ from config import (fname, submitting_method, hilbert_lcmv_contrasts,
                     hilbert_lcmv_regularization, hilbert_lcmv_weight_norms,
                     hilbert_tmin, hilbert_tmax,
                     hilbert_fmins, hilbert_fmaxs, 
-                    recordings, bad_subjects,
-                    subjects_with_no_BEM_simnibs, bem_conductivities)
+                    recordings, bad_subjects, bem_conductivities,
+                    subjects_with_no_3_layer_BEM_watershed)
 from sys import argv
 from helper_functions import should_we_run
 import mne
@@ -30,7 +30,7 @@ def this_function(subject, date, overwrite):
                     ratio_grand_average['second'] = list()
                     for event_index, event in enumerate(this_contrast):
                         output_name = \
-                        fname.source_hilbert_beamformer_grand_average_simnibs(
+                            fname.source_hilbert_beamformer_grand_average(
                             subject=subject, date=date,
                             fmin=fmin, fmax=fmax,
                             tmin=hilbert_tmin, tmax=hilbert_tmax,
@@ -41,7 +41,7 @@ def this_function(subject, date, overwrite):
                             weight_norm=hilbert_lcmv_weight_norm,
                             n_layers=n_layers)    
                         ratio_output_name = \
-            fname.source_hilbert_beamformer_contrast_grand_average_simnibs(
+                        fname.source_hilbert_beamformer_contrast_grand_average(
                                 subject=subject, date=date,
                                 fmin=fmin, fmax=fmax,
                                 tmin=hilbert_tmin, tmax=hilbert_tmax,
@@ -58,23 +58,23 @@ def this_function(subject, date, overwrite):
                             for recording_index, recording in enumerate(recordings):
                                 subject_name = recording['subject']
                                 if subject_name in bad_subjects or \
-                                    subject_name in subjects_with_no_BEM_simnibs:
+                    subject_name in subjects_with_no_3_layer_BEM_watershed:
                                     continue # skip the subject
                                 subject_counter += 1
-                                subject_date = recording['date']
+                                date = recording['date']
                                 
                                 lcmv = mne.read_source_estimate(
-                                fname.source_hilbert_beamformer_simnibs_morph(
-                                        subject=subject_name, date=subject_date,
+                                    fname.source_hilbert_beamformer_morph(
+                                        subject=subject_name,date=date,
                                         fmin=fmin, fmax=fmax,
                                         tmin=hilbert_tmin,
                                         tmax=hilbert_tmax,
                                         reg=hilbert_lcmv_regularization, 
                                         event=event,
                                         first_event=first_event,
-                                        second_event=second_event,
+                                        second_event=second_event),
                                         weight_norm=hilbert_lcmv_weight_norm,
-                                        n_layers=3))
+                                        n_layers=n_layers)
                         
                                 ## single grand averages
                                 if recording_index == 0:
@@ -95,43 +95,42 @@ def this_function(subject, date, overwrite):
                                     
                             grand_average._data /= subject_counter # get the mean
                             grand_average.save(output_name, ftype='h5')
-                
-                
-     
-                # subject_counter = 0
-                # for recording_index, recording in enumerate(recordings[:14]):
-                #     subject_name = recording['subject']
-                #     if subject_name in bad_subjects or \
-                #         subject_name in subjects_with_no_BEM_simnibs:
-                #         continue # skip the subject
-                #     first_lcmv = \
-                #         ratio_grand_average['first'][subject_counter]
-                #     second_lcmv = \
-                #         ratio_grand_average['second'][subject_counter]
-                #     if recording_index == 0:
-                #         ratio = first_lcmv.copy()
-                #         ratio._data = \
-                #             (first_lcmv.data - second_lcmv.data) / \
-                #             (first_lcmv.data + second_lcmv.data)
-                #     else:
-                #         this_ratio = \
-                #             (first_lcmv.data - second_lcmv.data) / \
-                #             (first_lcmv.data + second_lcmv.data)
-                #         ratio._data += this_ratio
-                #     subject_counter += 1
-        
-                        
-                # ratio._data /= subject_counter
                     
-    
-                # ratio.save(ratio_output_name, ftype='h5')
+                    
+         
+                    subject_counter = 0
+                    for recording_index, recording in enumerate(recordings):
+                        subject_name = recording['subject']
+                        if subject_name in bad_subjects:
+                            continue # skip the subject
+                        first_lcmv = \
+                            ratio_grand_average['first'][subject_counter]
+                        second_lcmv = \
+                            ratio_grand_average['second'][subject_counter]
+                        if recording_index == 0:
+                            ratio = first_lcmv.copy()
+                            ratio._data = \
+                                (first_lcmv.data - second_lcmv.data) / \
+                                (first_lcmv.data + second_lcmv.data)
+                        else:
+                            this_ratio = \
+                                (first_lcmv.data - second_lcmv.data) / \
+                                (first_lcmv.data + second_lcmv.data)
+                            ratio._data += this_ratio
+                        subject_counter += 1
+            
+                            
+                    ratio._data /= subject_counter
+                        
+        
+                    ratio.save(ratio_output_name, ftype='h5')
                 
 if submitting_method == 'hyades_frontend':
     queue = 'highmem_short.q'
     job_name = 'hlcmvga'
     n_jobs = 2
     deps = ['eve', 'hfilt', 'hepo', 'have', 'mri', 'ana', 'fwd', 'hlcmv',
-            'hmlcmv']
+            'mhlcmv']
     
 if submitting_method == 'hyades_backend':
     print(argv[:])

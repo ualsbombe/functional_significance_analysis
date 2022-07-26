@@ -7,7 +7,7 @@ Created on Mon May 17 09:08:56 2021
 """
 
 from config import (fname, submitting_method, src_spacing, bem_ico,
-                    bem_conductivity, morph_subject_to)
+                    bem_conductivities, morph_subject_to)
 from sys import argv
 from helper_functions import should_we_run
 import mne
@@ -16,19 +16,24 @@ def this_function(subject, overwrite):
 
     subjects_dir = fname.subjects_dir
     
-    ## bem surfaces
-    output_name = fname.anatomy_bem_surfaces(subject=subject, ico=bem_ico)
-    
-    if should_we_run(output_name, overwrite):
-        bem_surfaces = mne.bem.make_bem_model(subject, bem_ico,
-                                              bem_conductivity, subjects_dir)
-        mne.bem.write_bem_surfaces(output_name, bem_surfaces, overwrite)
+    for bem_conductivity in bem_conductivities:
+        n_layers = len(bem_conductivity)
+        ## bem surfaces
+        output_name = fname.anatomy_bem_surfaces(subject=subject, ico=bem_ico,
+                                                 n_layers=n_layers)
         
-    ## bem solution
-    output_name = fname.anatomy_bem_solutions(subject=subject, ico=bem_ico)
-    if should_we_run(output_name, overwrite):
-        bem_solution = mne.bem.make_bem_solution(bem_surfaces)
-        mne.bem.write_bem_solution(output_name, bem_solution, overwrite)
+        if should_we_run(output_name, overwrite):
+            bem_surfaces = mne.bem.make_bem_model(subject, bem_ico,
+                                                  bem_conductivity,
+                                                  subjects_dir)
+            mne.bem.write_bem_surfaces(output_name, bem_surfaces, overwrite)
+            
+        ## bem solution
+        output_name = fname.anatomy_bem_solutions(subject=subject, ico=bem_ico,
+                                                  n_layers=n_layers)
+        if should_we_run(output_name, overwrite):
+            bem_solution = mne.bem.make_bem_solution(bem_surfaces)
+            mne.bem.write_bem_solution(output_name, bem_solution, overwrite)
         
     ## volumetric source space
     output_name = fname.anatomy_volumetric_source_space(subject=subject,

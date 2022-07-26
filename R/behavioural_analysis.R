@@ -348,6 +348,78 @@ for(subject.index in 1:n.subjects)
 lines(x, y2, lwd=10)
 
 
+# GET DATA FRAME OF SUBJECT SLOPES ----------------------------------------
+
+mean.slope <- fixef(model.no.int)[3]
+
+subject.slopes <- data.frame(weak=numeric(n.subjects),
+                             omission=numeric(n.subjects))
+
+subject.estimates <- ranef(model.no.int)[1]$subject
+
+for(subject.index in 1:n.subjects)
+{
+    subject.slopes$omission[subject.index] <- 
+        mean.slope + subject.estimates$variance[subject.index]
+    subject.slopes$weak[subject.index] <- 
+        mean.slope + subject.estimates$variance[subject.index] +
+        subject.estimates$`stimulation_typeweak:variance`[subject.index]
+}
+
+# subject.slopes <- data.frame(slope=c(subject.slopes$weak,
+#                                      subject.slopes$omission))
+
+# subject.slopes$type <- factor(c(rep('weak', n.subjects),
+#                                 rep('omission', n.subjects)))
+# 
+# plot(jitter(as.integer(subject.slopes$type)), subject.slopes$slope,
+#      xlim=c(0, 3))
+
+
+# PLAY AROUND WITH PEAK CEREBELLAR VALUES ---------------------------------
+# do one with evoked responses
+# copied from python
+
+good.subject.indices <- c(1:5, 7:10, 12:30)
+
+# cerebellar.omission <- c(-0.00115931,  0.04012683,  0.02513166,  0.05174428, 
+#                          -0.02076979,
+#        -0.02795063,  0.03041785,  0.04362067,  0.05811672,  0.02558789,
+#        0.0687215 ,  0.00827079, -0.0293969 ,  0.08385569,  0.06076952,
+#        0.05528834, -0.03438129,  0.04318867, -0.0091313 ,  0.04282465,
+#        0.00326741,  0.03181742, -0.03236426,  0.04787387, -0.0452726 ,
+#        0.05254221, -0.02407919, -0.02002526)
+
+# cerebellar.weak <- c(-0.02708759,  0.02797616, -0.02218166, -0.01332885,  0.04542771,
+#        0.00452444,  0.02303803,  0.02117814, -0.0162491 ,  0.01630565,
+#        -0.00301833,  0.02842695, -0.00538495,  0.05087875,  0.04611307,
+#        0.00433935,  0.00472759,  0.00663111,  0.06758594,  0.00436168,
+#        0.00573104, -0.00247677,  0.06405189, -0.01341046,  0.04175999,
+#        0.08004729,  0.05035557,  0.05765665)
+
+# cerebellar.weak <- c( 0.01565042,  0.06434371,  0.01820711,  0.02298778, -0.02349238,
+#                       0.039361  ,  0.03841141, -0.00757248,  0.02642255, -0.02738319,
+#                       0.07098991,  0.09036805,  0.04186428, -0.02460145, -0.01427038,
+#                       0.0214681 ,  0.04957826,  0.0339404 ,  0.00350517,  0.04075574,
+#                       -0.00681289,  0.03060184,  0.00984197,  0.03359656,  0.01059551,
+#                       0.01804449, -0.00017876, -0.03953183)
+
+# plot(subject.slopes$omission[good.subject.indices], cerebellar.omission)
+# 
+# omission <- data.frame(cerebellar=cerebellar.omission,
+#                        slope=subject.slopes$omission[good.subject.indices])
+# 
+
+weak <- data.frame(cerebellar=cerebellar.weak,
+                   slope=subject.slopes$omission[good.subject.indices])
+
+# plot(cerebellar ~ slope, data=omission)
+# abline(lm(cerebellar ~ slope, data=omission))
+
+plot(cerebellar ~ slope, data=weak)
+abline(lm(cerebellar ~ slope, data=weak))
+
+
 # RUN FULL MODEL RESPONSE TIMES -------------------------------------------
 # 
 # control <- lmerControl()

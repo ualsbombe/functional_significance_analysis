@@ -51,7 +51,7 @@ ft_plot_mesh(meshes{3}, 'facealpha', 0.2, 'facecolor', 'skin')
 %% HEAD MODEL
 
 cfg = [];
-cfg.method = 'dipoli';
+cfg.method = 'openmeeg';
 cfg.conductivity = [0.3 0.006 0.3];
 
 headmodel = ft_prepare_headmodel(cfg, bnd);

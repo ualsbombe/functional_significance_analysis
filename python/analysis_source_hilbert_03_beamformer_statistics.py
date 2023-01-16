@@ -15,7 +15,7 @@ from config import (fname, submitting_method, src_spacing,
                     hilbert_lcmv_stat_p, hilbert_lcmv_stat_n_permutations,
                     hilbert_lcmv_stat_n_jobs, hilbert_lcmv_stat_seed,
                     hilbert_lcmv_stat_connectivity_dist,
-                    recordings, bad_subjects)
+                    recordings, bad_subjects, subjects_with_no_BEM_simnibs)
 from sys import argv
 from helper_functions import should_we_run
 
@@ -44,21 +44,24 @@ def this_function(subject, date, overwrite):
                 subject_counter = 0
                 for recording_index, recording in enumerate(recordings):
                     subject_name = recording['subject']
-                    if subject_name in bad_subjects:
+                    if subject_name in bad_subjects or \
+                        subject_name in subjects_with_no_BEM_simnibs:
                         continue # skip the subject
                     print('Loading subject: ' + subject_name)
                     subject_counter += 1
                     date = recording['date']
                     
                     lcmv = mne.read_source_estimate(
-                        fname.source_hilbert_beamformer_contrast_morph(
+                        fname.source_hilbert_beamformer_contrast_simnibs_morph(
                             subject=subject_name,date=date,
                             fmin=fmin, fmax=fmax,
                             tmin=hilbert_tmin,
                             tmax=hilbert_tmax,
                             reg=hilbert_lcmv_regularization,
                             first_event=this_contrast[0],
-                            second_event=this_contrast[1]) + '-stc.h5')
+                            second_event=this_contrast[1],
+                            n_layers=3,
+                        weight_norm='unit-noise-gain-invariant'))
 
                     lcmv.crop(hilbert_lcmv_stat_tmin,
                               hilbert_lcmv_stat_tmax)
@@ -86,8 +89,9 @@ def this_function(subject, date, overwrite):
             connectivity = mne.spatio_temporal_src_adjacency(src, n_times,
                                           hilbert_lcmv_stat_connectivity_dist)
             
-            threshold = -stats.distributions.t.ppf(hilbert_lcmv_stat_p / 2.0,
-                                                   n_subjects)
+            # threshold = -stats.distributions.t.ppf(hilbert_lcmv_stat_p / 2.0,
+            #                                        n_subjects)
+            threshold = None
             print('Running cluster statistics for: ' + str(this_contrast))
             t_obs, clusters, cluster_p_values, H0 = clu = \
                 mne.stats.spatio_temporal_cluster_1samp_test(

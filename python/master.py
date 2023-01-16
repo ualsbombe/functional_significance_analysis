@@ -42,8 +42,8 @@ recordings = [
     # dict(subject='0028', date='20210817_000000', mr_date='20210820_111354'),
     # dict(subject='0029', date='20210817_000000', mr_date='20210820_103315'),
     # dict(subject='0030', date='20210817_000000', mr_date='20210820_085929'),
-    # # dict(subject='0031', date='20210825_000000', mr_date='20210820_094714'),
-    # dict(subject='fsaverage', date='20210825_000000', mr_date=None)
+    # dict(subject='0031', date='20210825_000000', mr_date='20210820_094714'),
+    dict(subject='fsaverage', date='20210825_000000', mr_date=None)
               ]
 
 functions = [
@@ -89,9 +89,13 @@ functions = [
                 # 'analysis_source_hilbert_00_beamformer_contrast',
                 # 'analysis_source_hilbert_01_morph_beamformer_contrast',
                 # 'analysis_source_hilbert_02_beamformer_grand_average',
-                # 'analysis_source_hilbert_03_beamformer_statistics',
+                'analysis_source_hilbert_03_beamformer_statistics',
                 # 'analysis_source_hilbert_04_beamformer_labels',
                 # 'analysis_source_hilbert_05_beamformer_grand_average_labels',
+                
+                
+               ## ENVELOPE ANALYSIS
+                # 'analysis_envelope_00_correlation',
 
                 
             ]

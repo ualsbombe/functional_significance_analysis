@@ -20,6 +20,7 @@ def this_function(subject, date, overwrite):
     morph_name = fname.anatomy_simnibs_morph_volume(subject=subject,
                                             spacing=src_spacing)
     morph = mne.read_source_morph(morph_name)
+    morph.compute_vol_morph_mat()
     for this_contrast in evoked_lcmv_contrasts:
     
         for evoked_lcmv_weight_norm in evoked_lcmv_weight_norms:

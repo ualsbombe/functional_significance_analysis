@@ -413,6 +413,23 @@ rois = [
          'Vermis_10'
 ]
 
+#%% ENVELOPE CORRELATIONS
+
+envelope_events = [['w0', 'w15'],
+                   ['o0', 'o15']]
+envelope_downsampling = 100 ## ?!
+envelope_fmins = [4, 14]
+envelope_fmaxs = [7, 30]
+envelope_tmin = -0.100
+envelope_tmax =  0.100
+envelope_weight_norm = 'unit-noise-gain-invariant'
+envelope_regularization = 0.00
+envelope_picks = 'mag' # can they be combined?
+
+subjects_conn_cannot_be_saved = ['0005', '0008', 
+                                 '0015', '0016', '0017', '0018']
+
+
 #%% GRAND AVERAGE AND STATISTICS EVOKED
 
 ## grand average
@@ -456,7 +473,7 @@ hilbert_lcmv_stat_contrasts = [
                 ['s1', 's2'],  ['s2',  's3'],
                 ['w0', 'w15'], ['o0', 'o15']
                 ]
-hilbert_lcmv_stat_tmin = -0.200 # s
+hilbert_lcmv_stat_tmin = 0.000 # s
 hilbert_lcmv_stat_tmax = 0.200 # s
 hilbert_lcmv_stat_p = 0.05
 hilbert_lcmv_stat_n_permutations = 1024
@@ -502,6 +519,7 @@ fname.add('subject_beamformer_hilbert_path',
           '{subject_path}/beamformer_hilbert')
 fname.add('subject_beamformer_hilbert_labels_path',
           '{subject_path}/beamformer_hilbert/labels')
+fname.add('subject_envelope_path', '{subject_path}/envelopes')
 fname.add('subject_MR_path', '{raw_path}/{subject}/{date}/MR')
 fname.add('subject_MR_elsewhere_path',
           '{scratch_path}/MRs_from_elsewhere/{subject}/{date}/MR')
@@ -579,7 +597,6 @@ fname.add('hilbert_statistics_proj', '{subject_path}/statistics/fc-filt-{fmin}'
                                     '{first_event}-versus-{second_event}-stat-'
                                     '{stat_tmin}-{stat_tmax}-s-n_perm-{nperm}'
                                     '-seed-{seed}-pval-{pval}.npy')
-
 
 ## anatomy
 fname.add('anatomy_simnibs_bem_surfaces',
@@ -669,6 +686,19 @@ fname.add('source_hilbert_beamformer_contrast_grand_average_simnibs',
           'reg-{reg}-contrast-{first_event}-versus-{second_event}-{weight_norm}'
           '-simnibs-n_layers-{n_layers}-morph-vl.h5')
 
+
+## envelopes
+
+fname.add('envelope_correlation', '{subject_envelope_path}/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-event-{event}-'
+          'filter-{first_event}-{second_event}-{weight_norm}'
+          '-simnibs-n_layers-{n_layers}.nc')
+fname.add('envelope_correlation_morph_data', '{subject_envelope_path}/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-event-{event}-'
+          'filter-{first_event}-{second_event}-{weight_norm}'
+          '-simnibs-n_layers-{n_layers}-morph-data.npy')
+
+
 #FIXME: check whether below needs weight norm and n-layers
 fname.add('source_hilbert_beamformer_statistics', '{subject_path}/statistics/'
           'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'
@@ -691,11 +721,6 @@ fname.add('source_hilbert_beamformer_contrast_label_grand_average',
           '/beamformer_hilbert/labels/fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s'
           '-reg-{reg}-contrast-{first_event}-versus-{second_event}-{label}-vl'
           '-stc.h5')
-
-
-
-
-
 
 ## figure names
 fname.add('power_spectra_plot', '{subject_figure_path}/fc_power_spectra.png')

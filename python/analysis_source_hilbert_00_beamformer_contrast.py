@@ -264,8 +264,8 @@ if submitting_method == 'hyades_frontend':
     queue = 'highmem.q'
     job_name = 'hlcmv'
     n_jobs = 6
-    deps = ['eve', 'hfilt', 'hepo', 'have', 'mri', 'ana', 'fwd', 'snibslalal',
-            'snbemlala']
+    deps = ['eve', 'hfilt', 'hepo', 'have', 'mri', 'ana', 'fwd', 'snibs',
+            'snbem']
 
 
 if submitting_method == 'hyades_backend':

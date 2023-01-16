@@ -9,8 +9,7 @@ Created on Mon Jun 27 10:49:23 2022
 #heavily inspired by Chris Bailey
 #https://github.com/meeg-cfin/notebooks/blob/master/forward_modelling/Generate%20BEM%20surfaces%20from%20MR.ipynb
 
-from config import (fname, submitting_method, subjects_with_no_T2, stls,
-                    bem_conductivities, src_spacing, morph_subject_to)
+from config import (fname, submitting_method, stls, bem_conductivities)
 from sys import argv
 import mne
 from helper_functions import should_we_run, run_process_and_write_output

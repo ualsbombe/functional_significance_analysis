@@ -264,10 +264,11 @@ print(weak.accuracy.max.variance)
 print(omission.accuracy.mean.variance)
 print(weak.accuracy.mean.variance)
 
-# REMOVE HIGH AND LOW PERFORMERS ------------------------------------------
-# PLOT VARIANCE TEST ------------------------------------------------------
+# PLOT VARIANCE TEST  (limited range) -----------------------------------------
 
-par(lwd=3, font.lab=2, font.axis=2, mfrow=c(2, 1))
+jpeg('/home/lau/projects/functional_cerebellum/scratch/figures/behaviour.jpeg')
+
+par(lwd=3, font.lab=2, font.axis=2)
 xlim <- range(data.target$variance)
 
 
@@ -281,10 +282,13 @@ y1 <- inv.logit(intercept + slope*x)
 y2 <- inv.logit(intercept + stim.type + (slope+slope.change)*x)
 
 plot(x, y1, type='l', xlab='Variance of last three stimulations (s²)',
-     ylab='Propotion correct', ylim=c(0.70, 0.95))
+     ylab='Propotion correct', ylim=c(0.70, 1.00),
+     main='Behavioural performance')
 lines(x, y2, col='red')
-# legend('topright', legend=c('Omission', 'Weak'), lty=1, col=c('black', 'red'),
-#        text.font=2)
+legend('topright', legend=c('Omission', 'Weak'), lty=1, col=c('black', 'red'),
+       text.font=2)
+
+dev.off()
 
 x <- seq(0, 3, length.out=1000)
 y1 <- inv.logit(intercept + slope*x)
@@ -309,7 +313,7 @@ slope <- fixef(full.model)[3]
 slope.change <- fixef(full.model)[4]
 
 x <- seq(0, max(data.target$variance), length.out=100)
-x <- seq(0, 2, length.out=100)
+# x <- seq(0, 2, length.out=100)
 # xlim <- c(0, 2)
 y1 <- inv.logit(intercept + slope*x)
 y2 <- inv.logit(intercept + stim.type + (slope+slope.change)*x)
@@ -318,7 +322,7 @@ subject.effects <- ranef(full.model)$subject
 n.subjects <- dim(subject.effects)[1]
 
 plot(x, y1, type='n', xlab='Variance of last three stimulations (s²)',
-     ylab='Propotion correct', ylim=c(0, 1.00), lwd=10, main='Omission')
+     ylab='Propotion correct', ylim=c(0.4, 1.00), lwd=10, main='Omission')
 
 for(subject.index in 1:n.subjects)
 {
@@ -332,7 +336,7 @@ for(subject.index in 1:n.subjects)
 lines(x, y1, lwd=10)
 ## weak
 plot(x, y2, type='n', xlab='Variance of last three stimulations (s²)',
-     ylab='Propotion correct', ylim=c(0, 1.00), lwd=10, main='Weak')
+     ylab='Propotion correct', ylim=c(0.4, 1.00), lwd=10, main='Weak')
 
 for(subject.index in 1:n.subjects)
 {
@@ -341,7 +345,10 @@ for(subject.index in 1:n.subjects)
     subject.slope <- subject.effects[subject.index, 3]
     subject.slope.change <- subject.effects[subject.index, 4]
     
-    y <- inv.logit(intercept + subject.intercept + stim.type + subject.stim.type + (slope + subject.slope + slope.change + subject.slope.change) * x)
+    y <- inv.logit(intercept + subject.intercept + stim.type + 
+                       subject.stim.type +
+                       (slope + subject.slope + 
+                            slope.change + subject.slope.change) * x)
     lines(x, y, col='red')
 }
 
@@ -353,7 +360,8 @@ lines(x, y2, lwd=10)
 mean.slope <- fixef(model.no.int)[3]
 
 subject.slopes <- data.frame(weak=numeric(n.subjects),
-                             omission=numeric(n.subjects))
+                             omission=numeric(n.subjects),
+                             subject=subjects.df$subject)
 
 subject.estimates <- ranef(model.no.int)[1]$subject
 
@@ -366,60 +374,80 @@ for(subject.index in 1:n.subjects)
         subject.estimates$`stimulation_typeweak:variance`[subject.index]
 }
 
-# subject.slopes <- data.frame(slope=c(subject.slopes$weak,
-#                                      subject.slopes$omission))
 
-# subject.slopes$type <- factor(c(rep('weak', n.subjects),
-#                                 rep('omission', n.subjects)))
-# 
-# plot(jitter(as.integer(subject.slopes$type)), subject.slopes$slope,
-#      xlim=c(0, 3))
+# WRITE SUBJECT SLOPES TO CSV ---------------------------------------------
+
+path <- '/home/lau/projects/functional_cerebellum/scratch/behavioural_data'
+filename <- 'subject_slopes.csv'
+
+write.csv(subject.slopes, file=paste(path, filename, sep='/'), row.names=FALSE)
+
+# EVOKED-BEHAVIOUR CORRELATIONS -------------------------------------------
+
+
+
 
 
 # PLAY AROUND WITH PEAK CEREBELLAR VALUES ---------------------------------
 # do one with evoked responses
 # copied from python
-
-good.subject.indices <- c(1:5, 7:10, 12:30)
-
-# cerebellar.omission <- c(-0.00115931,  0.04012683,  0.02513166,  0.05174428, 
-#                          -0.02076979,
-#        -0.02795063,  0.03041785,  0.04362067,  0.05811672,  0.02558789,
-#        0.0687215 ,  0.00827079, -0.0293969 ,  0.08385569,  0.06076952,
-#        0.05528834, -0.03438129,  0.04318867, -0.0091313 ,  0.04282465,
-#        0.00326741,  0.03181742, -0.03236426,  0.04787387, -0.0452726 ,
-#        0.05254221, -0.02407919, -0.02002526)
-
-# cerebellar.weak <- c(-0.02708759,  0.02797616, -0.02218166, -0.01332885,  0.04542771,
-#        0.00452444,  0.02303803,  0.02117814, -0.0162491 ,  0.01630565,
-#        -0.00301833,  0.02842695, -0.00538495,  0.05087875,  0.04611307,
-#        0.00433935,  0.00472759,  0.00663111,  0.06758594,  0.00436168,
-#        0.00573104, -0.00247677,  0.06405189, -0.01341046,  0.04175999,
-#        0.08004729,  0.05035557,  0.05765665)
-
-# cerebellar.weak <- c( 0.01565042,  0.06434371,  0.01820711,  0.02298778, -0.02349238,
-#                       0.039361  ,  0.03841141, -0.00757248,  0.02642255, -0.02738319,
-#                       0.07098991,  0.09036805,  0.04186428, -0.02460145, -0.01427038,
-#                       0.0214681 ,  0.04957826,  0.0339404 ,  0.00350517,  0.04075574,
-#                       -0.00681289,  0.03060184,  0.00984197,  0.03359656,  0.01059551,
-#                       0.01804449, -0.00017876, -0.03953183)
-
-# plot(subject.slopes$omission[good.subject.indices], cerebellar.omission)
 # 
-# omission <- data.frame(cerebellar=cerebellar.omission,
+# good.subject.indices <- c(1:5, 7:9, 12:27, 29:30)
+# # good.subject.indices <- c(1:5, 7:9, 12:23, 25, 27, 29:30)
+# 
+# nan <- NaN
+# 
+# w0 <- c(2.33014359e-14, 9.56376769e-15, 4.47699942e-15, 1.63622985e-15,
+#            3.62656775e-15,            nan, 4.63585452e-15, 3.07619530e-14,
+#            2.80905073e-15,            nan,            nan, 1.13409114e-14,
+#            9.57100474e-15, 6.75477816e-15, 2.12748977e-14, 4.05020933e-14,
+#            1.05259948e-15, 2.56007577e-14, 4.18590172e-15, 7.02164055e-15,
+#            2.08952271e-14, 6.80311368e-15, 1.62215635e-14, 1.15949620e-14,
+#            5.35746010e-15, 2.68529731e-15, 3.24081243e-15,            nan,
+#            8.39723392e-15, 5.79607493e-15)
+#     
+# w15 <- c(7.11959822e-15, 2.15327261e-14, 3.56867432e-15, 1.24704832e-14,
+#            7.32591681e-15,            nan, 6.92249111e-15, 1.78201570e-14,
+#            1.81008781e-15,            nan,            nan, 1.50704983e-14,
+#            2.25879021e-14, 4.75702936e-15, 3.12593714e-14, 5.22912470e-14,
+#            6.54641801e-16, 5.86703063e-14, 3.50437995e-14, 1.37176435e-14,
+#            1.63483489e-15, 2.34349537e-15, 6.19372556e-15, 9.61844875e-15,
+#            1.15738802e-14, 2.72936225e-14, 6.39106264e-15,            nan,
+#            1.32437709e-14, 1.03147014e-14)
+# 
+# cerebellar.weak <- w0 - w15
+# 
+# cerebellar.omission <- c(-0.0692599 , -0.02860739, -0.0070418 ,  0.04176447, -0.02920996,
+#                          nan, -0.0032061 ,  0.02474657, -0.04801918,         nan,
+#                          nan,  0.00883006, -0.01156769, -0.00969528, -0.05480513,
+#                          -0.02789011, -0.01387964, -0.02019667,  0.01245323, -0.00054537,
+#                          -0.01416469,  0.01343061,  0.00235587,  0.00701085,  0.02761748,
+#                          -0.0097693 ,  0.05614039,         nan, -0.05033996, -0.01657967)
+# 
+# # plot(subject.slopes$omission[good.subject.indices], cerebellar.omission)
+# #
+# omission <- data.frame(cerebellar=cerebellar.omission[good.subject.indices],
 #                        slope=subject.slopes$omission[good.subject.indices])
 # 
-
-weak <- data.frame(cerebellar=cerebellar.weak,
-                   slope=subject.slopes$omission[good.subject.indices])
-
+# 
+# weak <- data.frame(cerebellar=cerebellar.weak[good.subject.indices],
+#                    slope=subject.slopes$weak[good.subject.indices],
+#                    d.prime=data.d.prime$d.prime[data.d.prime$jitter == '0%'][good.subject.indices])
+# 
+# hist(weak$slope)
+# hist(weak$cerebellar)
+# hist(weak$d.prime)
 # plot(cerebellar ~ slope, data=omission)
 # abline(lm(cerebellar ~ slope, data=omission))
-
-plot(cerebellar ~ slope, data=weak)
-abline(lm(cerebellar ~ slope, data=weak))
-
-
+# 
+# plot(cerebellar ~ slope, data=weak)
+# abline(lm(cerebellar ~ slope, data=weak))
+# 
+# # plot(cerebellar ~ d.prime, data=weak)
+# # abline(lm(cerebellar ~ d.prime, data=weak))
+# 
+# print(cor.test(weak$cerebellar, weak$slope, method='spearman'))
+# print(cor.test(weak$cerebellar, weak$d.prime, method='pearson'))
 # RUN FULL MODEL RESPONSE TIMES -------------------------------------------
 # 
 # control <- lmerControl()

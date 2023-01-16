@@ -12,10 +12,7 @@ from sys import argv
 
 
 def this_function(subject, date, overwrite):
-    if overwrite:
-        exist_ok=True
-    else:
-        exist_ok=False
+    exist_ok=True
     makedirs(fname.subject_path(subject=subject,
                                 date=date), exist_ok=exist_ok)
     makedirs(fname.subject_figure_path(subject=subject,
@@ -30,6 +27,8 @@ def this_function(subject, date, overwrite):
                                                           date=date),
                                                           exist_ok=exist_ok)
     makedirs(fname.subject_simnibs_path(subject=subject, date=date),
+             exist_ok=exist_ok)
+    makedirs(fname.subject_envelope_path(subject=subject, date=date),
              exist_ok=exist_ok)
 
 

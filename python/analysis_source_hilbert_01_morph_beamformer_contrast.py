@@ -17,7 +17,9 @@ from helper_functions import should_we_run
 import mne
 
 def this_function(subject, date, overwrite):
-    morph_name = fname.anatomy_simnibs_morph_volume(subject=subject,
+    # morph_name = fname.anatomy_simnibs_morph_volume(subject=subject,
+    #                                         spacing=src_spacing)
+    morph_name = fname.anatomy_morph_volume(subject=subject,
                                             spacing=src_spacing)
     morph = mne.read_source_morph(morph_name)
     morph.compute_vol_morph_mat()
@@ -29,8 +31,21 @@ def this_function(subject, date, overwrite):
                     n_layers = len(bem_conductivity)
                     input_names = list()
                     ## contrast 
+                    # input_names.append(
+                    #     fname.source_hilbert_beamformer_contrast_simnibs(
+                    #                     subject=subject,
+                    #                     date=date,
+                    #                     fmin=fmin,
+                    #                     fmax=fmax,
+                    #                     tmin=hilbert_tmin,
+                    #                     tmax=hilbert_tmax,
+                    #                     first_event=this_contrast[0],
+                    #                     second_event=this_contrast[1],
+                    #                     reg=hilbert_lcmv_regularization,
+                    #                     weight_norm=hilbert_lcmv_weight_norm,
+                    #                     n_layers=n_layers))
                     input_names.append(
-                        fname.source_hilbert_beamformer_contrast_simnibs(
+                        fname.source_hilbert_beamformer_contrast(
                                         subject=subject,
                                         date=date,
                                         fmin=fmin,
@@ -44,7 +59,20 @@ def this_function(subject, date, overwrite):
                                         n_layers=n_layers))
                     ## first and second events
                     for event in this_contrast:
-                        input_names.append(fname.source_hilbert_beamformer_simnibs(
+                        # input_names.append(fname.source_hilbert_beamformer_simnibs(
+                        #                     subject=subject,
+                        #                     date=date,
+                        #                     fmin=fmin,
+                        #                     fmax=fmax,
+                        #                     tmin=hilbert_tmin,
+                        #                     tmax=hilbert_tmax,
+                        #                     event=event,
+                        #             reg=hilbert_lcmv_regularization,
+                        #             first_event=this_contrast[0],
+                        #             second_event=this_contrast[1],
+                        #             weight_norm=hilbert_lcmv_weight_norm,
+                        #             n_layers=n_layers))
+                        input_names.append(fname.source_hilbert_beamformer(
                                             subject=subject,
                                             date=date,
                                             fmin=fmin,
@@ -60,8 +88,21 @@ def this_function(subject, date, overwrite):
                     
                     output_names = list()
                     ## contrast
+                    # output_names.append(
+                    #     fname.source_hilbert_beamformer_contrast_simnibs_morph(
+                    #                     subject=subject,
+                    #                     date=date,
+                    #                     fmin=fmin,
+                    #                     fmax=fmax,
+                    #                     tmin=hilbert_tmin,
+                    #                     tmax=hilbert_tmax,
+                    #                     first_event=this_contrast[0],
+                    #                     second_event=this_contrast[1],
+                    #                     reg=hilbert_lcmv_regularization,
+                    #                     weight_norm=hilbert_lcmv_weight_norm,
+                    #                     n_layers=n_layers))
                     output_names.append(
-                        fname.source_hilbert_beamformer_contrast_simnibs_morph(
+                        fname.source_hilbert_beamformer_contrast_morph(
                                         subject=subject,
                                         date=date,
                                         fmin=fmin,
@@ -75,8 +116,22 @@ def this_function(subject, date, overwrite):
                                         n_layers=n_layers))
                     ## first and second events
                     for event in this_contrast:
+                        # output_names.append(
+                        #     fname.source_hilbert_beamformer_simnibs_morph(
+                        #                     subject=subject,
+                        #                     date=date,
+                        #                     fmin=fmin,
+                        #                     fmax=fmax,
+                        #                     tmin=hilbert_tmin,
+                        #                     tmax=hilbert_tmax,
+                        #                     event=event,
+                        #             reg=hilbert_lcmv_regularization,
+                        #             first_event=this_contrast[0],
+                        #             second_event=this_contrast[1],
+                        #             weight_norm=hilbert_lcmv_weight_norm,
+                        #             n_layers=n_layers))
                         output_names.append(
-                            fname.source_hilbert_beamformer_simnibs_morph(
+                            fname.source_hilbert_beamformer_morph(
                                             subject=subject,
                                             date=date,
                                             fmin=fmin,
@@ -100,7 +155,7 @@ def this_function(subject, date, overwrite):
                             stc_morph.save(output_name, ftype='h5')
             
 if submitting_method == 'hyades_frontend':
-    queue = 'long.q'
+    queue = 'all.q'
     job_name = 'hmlcmv'
     n_jobs = 1
     deps = ['eve', 'hfilt', 'hepo', 'have', 'hlcmv', 'mri', 'ana', 'fwd']

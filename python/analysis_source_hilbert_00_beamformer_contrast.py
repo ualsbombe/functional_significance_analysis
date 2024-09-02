@@ -33,8 +33,22 @@ def this_function(subject, date, overwrite):
                 for bem_conductivity in bem_conductivities:
                     n_layers = len(bem_conductivity)
                     output_names = list()
+                    # output_names.append(
+                # fname.source_hilbert_beamformer_contrast_simnibs(
+                #                         subject=subject,
+                #                         date=date,
+                #                         fmin=fmin,
+                #                         fmax=fmax,
+                #                         tmin=hilbert_tmin,
+                #                         tmax=hilbert_tmax,
+                #                         first_event=this_contrast[0],
+                #                         second_event=this_contrast[1],
+                #                         reg=hilbert_lcmv_regularization,
+                #                         weight_norm=hilbert_lcmv_weight_norm,
+                #                         n_layers=n_layers))
+                        
                     output_names.append(
-                fname.source_hilbert_beamformer_contrast_simnibs(
+                    fname.source_hilbert_beamformer_contrast(
                                             subject=subject,
                                             date=date,
                                             fmin=fmin,
@@ -44,22 +58,8 @@ def this_function(subject, date, overwrite):
                                             first_event=this_contrast[0],
                                             second_event=this_contrast[1],
                                             reg=hilbert_lcmv_regularization,
-                                            weight_norm=hilbert_lcmv_weight_norm,
+                                            weight_norm=weight_norm,
                                             n_layers=n_layers))
-                        
-                    # output_names.append(
-                    # fname.source_hilbert_beamformer_contrast(
-                    #                         subject=subject,
-                    #                         date=date,
-                    #                         fmin=fmin,
-                    #                         fmax=fmax,
-                    #                         tmin=hilbert_tmin,
-                    #                         tmax=hilbert_tmax,
-                    #                         first_event=this_contrast[0],
-                    #                         second_event=this_contrast[1],
-                    #                         reg=hilbert_lcmv_regularization,
-                    #                         weight_norm=weight_norm,
-                    #                         n_layers=n_layers))
                     for output_name in output_names:
                         if should_we_run(output_name, overwrite):
                             if not raw_loaded:

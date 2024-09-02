@@ -38,21 +38,34 @@ def this_function(subject, date, overwrite):
                 nperm=hilbert_lcmv_stat_n_permutations,
                 seed=hilbert_lcmv_stat_seed,
                 condist=hilbert_lcmv_stat_connectivity_dist,
-                pval=hilbert_lcmv_stat_p)
+                pval=hilbert_lcmv_stat_p,
+                weight_norm='unit-noise-gain-invariant',
+                n_layers=1)
         
             if should_we_run(output_name, overwrite):
                 subject_counter = 0
                 for recording_index, recording in enumerate(recordings):
                     subject_name = recording['subject']
-                    if subject_name in bad_subjects or \
-                        subject_name in subjects_with_no_BEM_simnibs:
+                    if subject_name in bad_subjects:# or \
+                        # subject_name in subjects_with_no_BEM_simnibs:
                         continue # skip the subject
                     print('Loading subject: ' + subject_name)
                     subject_counter += 1
                     date = recording['date']
                     
+                    # lcmv = mne.read_source_estimate(
+                    #     fname.source_hilbert_beamformer_contrast_simnibs_morph(
+                    #         subject=subject_name,date=date,
+                    #         fmin=fmin, fmax=fmax,
+                    #         tmin=hilbert_tmin,
+                    #         tmax=hilbert_tmax,
+                    #         reg=hilbert_lcmv_regularization,
+                    #         first_event=this_contrast[0],
+                    #         second_event=this_contrast[1],
+                    #         n_layers=3,
+                    #     weight_norm='unit-noise-gain-invariant'))
                     lcmv = mne.read_source_estimate(
-                        fname.source_hilbert_beamformer_contrast_simnibs_morph(
+                        fname.source_hilbert_beamformer_contrast_morph(
                             subject=subject_name,date=date,
                             fmin=fmin, fmax=fmax,
                             tmin=hilbert_tmin,
@@ -60,7 +73,7 @@ def this_function(subject, date, overwrite):
                             reg=hilbert_lcmv_regularization,
                             first_event=this_contrast[0],
                             second_event=this_contrast[1],
-                            n_layers=3,
+                            n_layers=1,
                         weight_norm='unit-noise-gain-invariant'))
 
                     lcmv.crop(hilbert_lcmv_stat_tmin,
@@ -108,7 +121,7 @@ def this_function(subject, date, overwrite):
             np.save(output_name, cluster_dict)
         
 if submitting_method == 'hyades_frontend':
-    queue = 'highmem_short.q'
+    queue = 'long.q'
     job_name = 'hstatlcmv'
     n_jobs = hilbert_lcmv_stat_n_jobs
     deps = ['eve', 'hfilt', 'hepo', 'have', 'mri', 'ana', 'fwd', 'hlcmv',

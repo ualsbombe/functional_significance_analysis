@@ -181,6 +181,7 @@ behavioural_data_time_stamps['0029'] = '131300'
 behavioural_data_time_stamps['0030'] = '161750'
 behavioural_data_time_stamps['0031'] = '085032'
 
+
 #%% GENERAL
 
 collapsed_event_id = dict(w0=dict(old_event_ids=['w0_hit', 'w0_miss'],
@@ -280,7 +281,8 @@ hilbert_reject = None ## think about this...
 ## z transform contrasts
 
 hilbert_contrasts = [
-                      ['s1', 's2'], ['s2', 's3'], #['s3', 's4_0'],
+                      ['s1', 's2'], 
+                      ['s2', 's3'], #['s3', 's4_0'],
                       # ['s4_0', 's5_0'], ['s5_0', 's6_0'],
                       # ['s4_15', 's5_15'], ['s5_15', 's6_15'],
                       # ['s4_0', 's4_15'], ['s5_0', 's5_15'], ['s6_0', 's6_15'],
@@ -319,18 +321,19 @@ src_spacing = 7.5 # mm
 bem_ico = 4
 bem_conductivities = [
                         [0.3], # single-layer model
-                        [0.3, 0.006, 0.3] # three-layer model
+                        # [0.3, 0.006, 0.3] # three-layer model
                         ]
 
 ## bem solution
+
+subjects_no_3_layer_watershed = ['0001', '0004', '0008', '0011', '0012',
+                                 '0022', '0028', '0029']
 
 ## morph 
 
 morph_subject_to = 'fsaverage'
 
 ## forward solution
-
-n_jobs_forward = 2
 
 ## simnibs
 
@@ -353,7 +356,7 @@ evoked_lcmv_proj = False
 ## lcmv contrasts
 
 hilbert_lcmv_contrasts = hilbert_contrasts
-hilbert_lcmv_weight_norms = ['unit-noise-gain-invariant', 'unit-gain']
+hilbert_lcmv_weight_norms = ['unit-noise-gain-invariant']#, 'unit-gain']
 hilbert_lcmv_regularization = 0.00 # should we regularize?
 hilbert_lcmv_picks = 'mag' # can they be combined?
 
@@ -412,22 +415,27 @@ rois = [
          'Vermis_9',
          'Vermis_10'
 ]
-
 #%% ENVELOPE CORRELATIONS
 
 envelope_events = [['w0', 'w15'],
                    ['o0', 'o15']]
 envelope_downsampling = 100 ## ?!
-envelope_fmins = [4, 14]
-envelope_fmaxs = [7, 30]
+envelope_fmins = [
+    4,
+    # 14
+                  ]
+envelope_fmaxs = [
+    7,
+    # 30
+    ]
 envelope_tmin = -0.100
 envelope_tmax =  0.100
 envelope_weight_norm = 'unit-noise-gain-invariant'
 envelope_regularization = 0.00
 envelope_picks = 'mag' # can they be combined?
 
-subjects_conn_cannot_be_saved = ['0005', '0008', 
-                                 '0015', '0016', '0017', '0018']
+subjects_conn_cannot_be_saved = ['0001', '0005', '0008', '0011', '0012',
+                                 '0015', '0016', '0017', '0018', '0027']
 
 
 #%% GRAND AVERAGE AND STATISTICS EVOKED
@@ -599,10 +607,22 @@ fname.add('hilbert_statistics_proj', '{subject_path}/statistics/fc-filt-{fmin}'
                                     '-seed-{seed}-pval-{pval}.npy')
 
 ## anatomy
+
+# waterhshed
+
+fname.add('anatomy_bem_solutions',
+          '{subject_bem_path}/ico-{ico}-n_layers-{n_layers}-bem-sol.fif')
+
+fname.add('anatomy_morph_volume', '{subject_bem_path}/volume-'
+          '{spacing}_mm-morph.h5')
+
+#simnibs
+
 fname.add('anatomy_simnibs_bem_surfaces',
           '{simnibs_bem_path}/{n_layers}-layers-bem.fif')
 fname.add('anatomy_simnibs_bem_solutions',
           '{simnibs_bem_path}/{n_layers}-layers-bem-sol.fif')
+
 fname.add('anatomy_volumetric_source_space', '{subject_bem_path}/volume'
                                             '-{spacing}_mm-src.fif')
 fname.add('anatomy_simnibs_morph_volume', '{simnibs_bem_path}/volume-'
@@ -612,6 +632,40 @@ fname.add('anatomy_simnibs_forward_model', '{subject_path}/'
           'fc-simnibs-volume-{spacing}_mm-{n_layers}-layers-fwd.fif')
 
 ## source evoked
+
+# based on watershed
+
+fname.add('source_evoked_beamformer', '{subject_path}'
+          '/beamformer_evoked/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'
+          '{event}-filter-{first_event}-{second_event}-{weight_norm}-'
+          'n_layers-{n_layers}-vl.stc')
+
+fname.add('source_evoked_beamformer_contrast', '{subject_path}'
+          '/beamformer_evoked/fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-'
+          'reg-{reg}-contrast-{first_event}-versus-{second_event}-'
+          'n_layers-{n_layers}-{weight_norm}-vl.stc')
+
+fname.add('source_evoked_beamformer_morph',
+          '{subject_path}/beamformer_evoked/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'
+          '{event}-filter-{first_event}-{second_event}-{weight_norm}-'
+          'n_layers-{n_layers}-morph-vl-stc.h5')
+
+fname.add('source_evoked_beamformer_contrast_morph', '{subject_path}'
+          '/beamformer_evoked/fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-'
+          'reg-{reg}-contrast-{first_event}-versus-{second_event}-'
+          'n_layers-{n_layers}-{weight_norm}-morph-vl-stc.h5')
+
+fname.add('source_evoked_beamformer_grand_average', '{subject_path}/'
+          'beamformer_evoked/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-{event}-'
+          'filter-{first_event}-{second_event}-{weight_norm}'
+          '-n_layers-{n_layers}-morph-vl.h5')
+
+
+# based on simnibs
+
 fname.add('source_evoked_beamformer_simnibs', '{subject_path}'
           '/beamformer_evoked/'
           'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'
@@ -649,6 +703,44 @@ fname.add('source_evoked_beamformer_statistics', '{subject_path}/statistics/'
           '-seed-{seed}-condist-{condist}-pval-{pval}.npy')
 
 ## source hilbert
+
+# watershed
+
+fname.add('source_hilbert_beamformer', '{subject_path}/beamformer_hilbert/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'
+          '{event}-filter-{first_event}-{second_event}-{weight_norm}'
+          '-n_layers-{n_layers}-vl.stc')
+
+fname.add('source_hilbert_beamformer_contrast', '{subject_path}'
+          '/beamformer_hilbert/fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-'
+          'reg-{reg}-contrast-{first_event}-versus-{second_event}-{weight_norm}'
+          '-n_layers-{n_layers}-vl.stc')
+
+fname.add('source_hilbert_beamformer_morph', '{subject_path}'
+          '/beamformer_hilbert/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'
+          '{event}-filter-{first_event}-{second_event}-{weight_norm}'
+          '-n_layers-{n_layers}-morph-vl-stc.h5')
+
+fname.add('source_hilbert_beamformer_contrast_morph', '{subject_path}'
+          '/beamformer_hilbert/fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-'
+          'reg-{reg}-contrast-{first_event}-versus-{second_event}-{weight_norm}'
+          '-n_layers-{n_layers}-morph-vl-stc.h5')
+
+fname.add('source_hilbert_beamformer_grand_average', '{subject_path}'
+          '/beamformer_hilbert/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'
+          '{event}-filter-{first_event}-{second_event}-{weight_norm}'
+          '-n_layers-{n_layers}-morph-vl.h5')
+
+
+fname.add('source_hilbert_beamformer_contrast_grand_average',
+          '{subject_path}'
+          '/beamformer_hilbert/fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-'
+          'reg-{reg}-contrast-{first_event}-versus-{second_event}-{weight_norm}'
+          '-n_layers-{n_layers}-morph-vl.h5')
+
+# simnibs
 
 fname.add('source_hilbert_beamformer_simnibs', '{subject_path}/beamformer_hilbert/'
           'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'
@@ -692,19 +784,36 @@ fname.add('source_hilbert_beamformer_contrast_grand_average_simnibs',
 fname.add('envelope_correlation', '{subject_envelope_path}/'
           'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-event-{event}-'
           'filter-{first_event}-{second_event}-{weight_norm}'
-          '-simnibs-n_layers-{n_layers}.nc')
+          '-n_layers-{n_layers}.nc')
 fname.add('envelope_correlation_morph_data', '{subject_envelope_path}/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-event-{event}-'
+          'filter-{first_event}-{second_event}-{weight_norm}'
+          '-n_layers-{n_layers}-morph-data.npy')
+
+# simnibs
+fname.add('envelope_correlation_simnibs', '{subject_envelope_path}/'
+          'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-event-{event}-'
+          'filter-{first_event}-{second_event}-{weight_norm}'
+          '-simnibs-n_layers-{n_layers}.nc')
+fname.add('envelope_correlation_simnibs_morph_data', '{subject_envelope_path}/'
           'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-event-{event}-'
           'filter-{first_event}-{second_event}-{weight_norm}'
           '-simnibs-n_layers-{n_layers}-morph-data.npy')
 
 
-#FIXME: check whether below needs weight norm and n-layers
+## stats
+
 fname.add('source_hilbert_beamformer_statistics', '{subject_path}/statistics/'
           'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'
           '{first_event}-{second_event}-morph-stat'
           '{stat_tmin}-{stat_tmax}-s-n_perm-{nperm}'
-          '-seed-{seed}-condist-{condist}-pval-{pval}.npy')
+          '-seed-{seed}-condist-{condist}-pval-{pval}'
+          '-weight_norm-{weight_norm}-n_layers-{n_layers}.npy')
+
+#FIXME: check whether below needs weight norm and n-layers
+
+
+
 fname.add('source_hilbert_beamformer_label', '{subject_path}'
           '/beamformer_hilbert/labels/'
           'fc-filt-{fmin}-{fmax}-Hz-{tmin}-{tmax}-s-reg-{reg}-'

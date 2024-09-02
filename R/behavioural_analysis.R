@@ -1,6 +1,8 @@
 rm(list=ls())
 inv.logit <- function(x) exp(x) / (1 + exp(x))
 library(lme4)
+library(matrixStats)
+library(RcppCNPy)
 
 
 # LOAD DATA ---------------------------------------------------------------
@@ -8,7 +10,7 @@ library(lme4)
 behavioural.path <- paste('/home/lau/projects/functional_cerebellum/',
                             'scratch/behavioural_data', sep='')
 subjects.df <- data.frame(
-    subject=c('0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008',
+    subject=c('0001', '0002', '0003', '0004', '0005','0006', '0007', '0008',
               '0009', '0010', '0011', '0012', '0013', '0014', '0015', '0016',
               '0017', '0018', '0019', '0020', '0021', '0022', '0023', '0024',
               '0026', '0027', '0028', '0029', '0030', '0031'),
@@ -71,6 +73,27 @@ data.target$response_time <- as.numeric(as.character(data.target$response_time))
 data.target$jitter <- NA
 data.target$stimulation_type <- NA
 data.target$response_type <- NA
+
+
+# GET TARGET CURRENTS -----------------------------------------------------
+
+target.currents = numeric(n.subjects)
+n <- 0
+
+for(subject in unique(data.target$subject))
+{
+    n <- n + 1
+    target.current <- 
+        unique(data.target$current[data.target$subject == subject])
+    target.current <- target.current[!is.na(target.current)]
+    target.currents[n] <- target.current
+}
+
+
+path <- '/home/lau/projects/functional_cerebellum/scratch/behavioural_data'
+filename <- 'target_currents.npy'
+
+npySave(paste(path, filename, sep='/'), target.currents)
 
 # ESTIMATE MEAN TIME FOR STEADY TRIALS ------------------------------------
 
@@ -159,6 +182,7 @@ for(subject.index in 1:n.subjects)
             1 -
             sum(this.data$correct[this.data$stimulation_type == 'omission']) /
             sum(this.data$stimulation_type == 'omission')
+        if(is.nan(false.alarm.rate)) false.alarm.rate <- 0
         if(false.alarm.rate == 0) false.alarm.rate <- 1 / 
             sum(this.data$stimulation_type == 'omission') 
         this.d.prime <- qnorm(hit.rate) - qnorm(false.alarm.rate)
@@ -209,7 +233,7 @@ data.d.prime$jitter <- levels(data.target$jitter)
 # optCtrl <- list(FtolAbs=1e-10, FtolRel=1e-20, XtolRel=1e-11)
 # control <- glmerControl(optCtrl=optCtrl)
 control <- glmerControl()
-control$checkConv$check.conv.grad$tol <- 0.004 ## this "works"...
+control$checkConv$check.conv.grad$tol <- 0.0025 ## this "works"...
 # data.target$variance.c <- scale(data.target$variance.c, scale=FALSE)
 full.model <- glmer(correct ~ stimulation_type * variance +
                    (stimulation_type * variance | subject),
@@ -264,48 +288,12 @@ print(weak.accuracy.max.variance)
 print(omission.accuracy.mean.variance)
 print(weak.accuracy.mean.variance)
 
-# PLOT VARIANCE TEST  (limited range) -----------------------------------------
 
-jpeg('/home/lau/projects/functional_cerebellum/scratch/figures/behaviour.jpeg')
-
-par(lwd=3, font.lab=2, font.axis=2)
-xlim <- range(data.target$variance)
-
-
-intercept <- fixef(full.model)[1]
-stim.type <- fixef(full.model)[2]
-slope <- fixef(full.model)[3]
-slope.change <- fixef(full.model)[4]
-
-x <- seq(0, max(data.target$variance), length.out=100)
-y1 <- inv.logit(intercept + slope*x)
-y2 <- inv.logit(intercept + stim.type + (slope+slope.change)*x)
-
-plot(x, y1, type='l', xlab='Variance of last three stimulations (s²)',
-     ylab='Propotion correct', ylim=c(0.70, 1.00),
-     main='Behavioural performance')
-lines(x, y2, col='red')
-legend('topright', legend=c('Omission', 'Weak'), lty=1, col=c('black', 'red'),
-       text.font=2)
-
-dev.off()
-
-x <- seq(0, 3, length.out=1000)
-y1 <- inv.logit(intercept + slope*x)
-y2 <- inv.logit(intercept + stim.type + (slope+slope.change)*x)
-plot(x, y1, type='l', xlab='Variance of last three stimulations (s²)',
-     ylab='Propotion correct', ylim=c(0.00, 1.00))
-lines(x, y2, col='red')
-legend('topright', legend=c('Omission', 'Weak'), lty=1, col=c('black', 'red'),
-       text.font=2)
-
-
-# PLOT SINGLE SUBJECTS AS WELL --------------------------------------------
+# PLOT SINGLE SUBJECTS --------------------------------------------
 
 
 par(lwd=3, font.lab=2, font.axis=2, mfrow=c(2, 1))
 xlim <- range(data.target$variance)
-
 
 intercept <- fixef(full.model)[1]
 stim.type <- fixef(full.model)[2]
@@ -322,21 +310,28 @@ subject.effects <- ranef(full.model)$subject
 n.subjects <- dim(subject.effects)[1]
 
 plot(x, y1, type='n', xlab='Variance of last three stimulations (s²)',
-     ylab='Propotion correct', ylim=c(0.4, 1.00), lwd=10, main='Omission')
+     ylab='Propotion correct', ylim=c(0.0, 1.00), lwd=10, main='Omission')
+
+o_ys <- matrix(nrow=n.subjects, ncol=length(y1))
 
 for(subject.index in 1:n.subjects)
 {
     subject.intercept <- subject.effects[subject.index, 1]
     subject.slope <- subject.effects[subject.index, 3]
-    y <- inv.logit(intercept + subject.intercept + (slope + subject.slope) * x)
+    logit.y <- intercept + subject.intercept + (slope + subject.slope) * x
+    y <- inv.logit(logit.y)
     lines(x, y, col='red')
     if((slope + subject.slope) > 0) print(subjects.df$subject[subject.index])
+    o_ys[subject.index, ] <- logit.y
 }
 
 lines(x, y1, lwd=10)
 ## weak
 plot(x, y2, type='n', xlab='Variance of last three stimulations (s²)',
      ylab='Propotion correct', ylim=c(0.4, 1.00), lwd=10, main='Weak')
+
+w_ys <- matrix(nrow=n.subjects, ncol=length(y1))
+
 
 for(subject.index in 1:n.subjects)
 {
@@ -345,14 +340,88 @@ for(subject.index in 1:n.subjects)
     subject.slope <- subject.effects[subject.index, 3]
     subject.slope.change <- subject.effects[subject.index, 4]
     
-    y <- inv.logit(intercept + subject.intercept + stim.type + 
-                       subject.stim.type +
-                       (slope + subject.slope + 
-                            slope.change + subject.slope.change) * x)
+    logit.y <- intercept + subject.intercept + stim.type + 
+        subject.stim.type +
+        (slope + subject.slope + 
+             slope.change + subject.slope.change) * x
+    
+    y <- inv.logit(logit.y)
     lines(x, y, col='red')
+    w_ys[subject.index, ] <- logit.y
+    
 }
 
 lines(x, y2, lwd=10)
+
+# PLOT VARIANCE TEST  (limited range) -----------------------------------------
+
+# jpeg('/home/lau/projects/functional_cerebellum/scratch/figures/behaviour.jpeg')
+
+# png(paste('/home/lau/Nextcloud/arbejde/AU/papers/functional_significance/',
+#             'figures/figure_parts/fig3_behaviour.png', sep=''))
+
+par(lwd=3, font.lab=2, font.axis=2)
+xlim <- range(data.target$variance)
+
+o_quantiles <- colQuantiles(inv.logit(o_ys), probs=seq(from=0, to=1, by=0.1))
+w_quantiles <- colQuantiles(inv.logit(w_ys), probs=seq(from=0, to=1, by=0.1))
+
+intercept <- fixef(full.model)[1]
+stim.type <- fixef(full.model)[2]
+slope <- fixef(full.model)[3]
+slope.change <- fixef(full.model)[4]
+
+path <- '/home/lau/projects/functional_cerebellum/scratch/behavioural_data'
+filename <- 'full_model_coefficients.csv'
+
+write.csv(t(fixef(full.model)), file=paste(path, filename, sep='/'),
+          row.names=FALSE)
+
+x <- seq(0, max(data.target$variance), length.out=100)
+y1 <- inv.logit(intercept + slope*x)
+y2 <- inv.logit(intercept + stim.type + (slope+slope.change)*x)
+
+
+
+plot(x, y1, type='n', xlab='Variance of last three stimulations (s²)',
+     ylab='Propotion correct', ylim=c(0.70, 1.00),
+     main='Behavioural performance', col='yellow2')
+# polygon(c(x, rev(x)), c(o_quantiles[, 4], rev(o_quantiles[, 8])), col=rgb(238/255, 238/255, 0, 0.2),
+# border=NA)
+# polygon(c(x, rev(x)), c(w_quantiles[, 4], rev(w_quantiles[, 8])), col=rgb(0, 1, 0, 0.2),
+#         border=NA)
+# lines(x, o_quantiles[, 6], col='yellow2')
+# lines(x, w_quantiles[, 6], col='green')
+lines(x, y1, col='yellow2')
+lines(x, y2, col='green')
+legend('topright', legend=c('Omission', 'Weak'), lty=1, col=c('yellow2', 'green'),
+       text.font=2)
+
+
+
+## lala
+
+# pred.int.data <- data.frame(variance=seq(0, 0.10, 0.001),
+#                             stimulation_type=rep('weak', 101), subject='0065')
+# 
+# lala <- predict(full.model, pred.int.data)
+performance <- inv.logit
+# dev.off()
+
+# lala --------------------------------------------------------------------
+
+
+x <- seq(0, 3, length.out=1000)
+y1 <- inv.logit(intercept + slope*x)
+y2 <- inv.logit(intercept + stim.type + (slope+slope.change)*x)
+plot(x, y1, type='l', xlab='Variance of last three stimulations (s²)',
+     ylab='Propotion correct', ylim=c(0.00, 1.00))
+lines(x, y2, col='red')
+legend('topright', legend=c('Omission', 'Weak'), lty=1, col=c('black', 'red'),
+       text.font=2)
+
+
+
 
 
 # GET DATA FRAME OF SUBJECT SLOPES ----------------------------------------
@@ -477,3 +546,31 @@ write.csv(subject.slopes, file=paste(path, filename, sep='/'), row.names=FALSE)
 #                         (stimulation_type * variance | subject),
 #                     data=data.target, verbose=2,
 #                     control=control, REML=FALSE)
+
+
+# checking models ---------------------------------------------------------
+
+full.model.check <- glmer(correct ~ stimulation_type * variance +
+                        (stimulation_type + variance | subject),
+                    data=data.target, family='binomial', verbose=2,
+                    control=control)
+
+model.no.int.check <- glmer(correct ~ stimulation_type + variance + 
+                          (stimulation_type + variance | subject),
+                      data=data.target, family='binomial', verbose=2,
+                      control=control) ## winning model
+
+model.no.stim.check <- glmer(correct ~ variance + 
+                           (stimulation_type + variance | subject),
+                       data=data.target, family='binomial', verbose=2,
+                       control=control)
+
+model.no.var.check <- glmer(correct ~ stimulation_type + 
+                          (stimulation_type + variance | subject),
+                      data=data.target, family='binomial', verbose=2,
+                      control=control)
+
+model.null.check <- glmer(correct ~ 1 + 
+                        (stimulation_type + variance | subject),
+                    data=data.target, family='binomial', verbose=2,
+                    control=control)

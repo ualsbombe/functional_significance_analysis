@@ -37,8 +37,8 @@ def this_function(subject, date, overwrite):
             ## sort files
             for recording_index, recording in enumerate(recordings):
                 subject = recording['subject']
-                if subject in bad_subjects or \
-                    subject in subjects_with_no_BEM_simnibs:
+                if subject in bad_subjects:# or \
+                    # subject in subjects_with_no_BEM_simnibs:
                     continue ## skip the subject
                 date = recording['date']
                 evokeds = mne.read_evokeds(fname.evoked_average_proj(

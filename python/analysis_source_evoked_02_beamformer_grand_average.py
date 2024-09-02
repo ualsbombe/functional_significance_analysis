@@ -25,8 +25,20 @@ def this_function(subject, date, overwrite):
             for evoked_lcmv_weight_norm in evoked_lcmv_weight_norms:
                 for bem_conductivity in bem_conductivities:
                     n_layers = len(bem_conductivity)
+                    # output_name = \
+                    #     fname.source_evoked_beamformer_grand_average_simnibs(
+                    #     subject=subject, date=date, fmin=evoked_fmin, 
+                    #     fmax=evoked_fmax,
+                    #     tmin=evoked_tmin, tmax=evoked_tmax,
+                    #     reg=evoked_lcmv_regularization,
+                    #     event=event,
+                    #     first_event=this_contrast[0],
+                    #     second_event=this_contrast[1],
+                    #     weight_norm=evoked_lcmv_weight_norm,
+                    #     n_layers=n_layers)
+                        
                     output_name = \
-                        fname.source_evoked_beamformer_grand_average_simnibs(
+                        fname.source_evoked_beamformer_grand_average(
                         subject=subject, date=date, fmin=evoked_fmin, 
                         fmax=evoked_fmax,
                         tmin=evoked_tmin, tmax=evoked_tmax,
@@ -41,14 +53,25 @@ def this_function(subject, date, overwrite):
                         subject_counter = 0
                         for recording_index,recording in enumerate(recordings):
                             subject_name = recording['subject']
-                            if subject_name in bad_subjects or \
-                                (subject_name in subjects_with_no_BEM_simnibs):
+                            if subject_name in bad_subjects:# or \
+                                # (subject_name in subjects_with_no_BEM_simnibs):
                                 continue # skip the subject
                             subject_counter += 1
                             date = recording['date']
                             
+                            # lcmv = mne.read_source_estimate(
+                            #     fname.source_evoked_beamformer_simnibs_morph(
+                            # subject=subject_name,date=date,
+                            # fmin=evoked_fmin, fmax=evoked_fmax,
+                            # tmin=evoked_tmin,
+                            # tmax=evoked_tmax,
+                            # reg=evoked_lcmv_regularization, event=event,
+                            # first_event=this_contrast[0],
+                            # second_event=this_contrast[1],
+                            # weight_norm=evoked_lcmv_weight_norm,
+                            # n_layers=n_layers))
                             lcmv = mne.read_source_estimate(
-                                fname.source_evoked_beamformer_simnibs_morph(
+                                fname.source_evoked_beamformer_morph(
                             subject=subject_name,date=date,
                             fmin=evoked_fmin, fmax=evoked_fmax,
                             tmin=evoked_tmin,

@@ -29,8 +29,30 @@ def this_function(subject, date, overwrite):
                     ratio_grand_average['first'] = list()
                     ratio_grand_average['second'] = list()
                     for event_index, event in enumerate(this_contrast):
+            #             output_name = \
+            #             fname.source_hilbert_beamformer_grand_average_simnibs(
+            #                 subject=subject, date=date,
+            #                 fmin=fmin, fmax=fmax,
+            #                 tmin=hilbert_tmin, tmax=hilbert_tmax,
+            #                 reg=hilbert_lcmv_regularization,
+            #                 event=event,
+            #                 first_event=first_event, 
+            #                 second_event=second_event,
+            #                 weight_norm=hilbert_lcmv_weight_norm,
+            #                 n_layers=n_layers)    
+            #             ratio_output_name = \
+            # fname.source_hilbert_beamformer_contrast_grand_average_simnibs(
+            #                     subject=subject, date=date,
+            #                     fmin=fmin, fmax=fmax,
+            #                     tmin=hilbert_tmin, tmax=hilbert_tmax,
+            #                     reg=hilbert_lcmv_regularization,
+            #                     event=event,
+            #                     first_event=first_event, 
+            #                     second_event=second_event,
+            #                     weight_norm=hilbert_lcmv_weight_norm,
+            #                     n_layers=n_layers)
                         output_name = \
-                        fname.source_hilbert_beamformer_grand_average_simnibs(
+                        fname.source_hilbert_beamformer_grand_average(
                             subject=subject, date=date,
                             fmin=fmin, fmax=fmax,
                             tmin=hilbert_tmin, tmax=hilbert_tmax,
@@ -41,7 +63,7 @@ def this_function(subject, date, overwrite):
                             weight_norm=hilbert_lcmv_weight_norm,
                             n_layers=n_layers)    
                         ratio_output_name = \
-            fname.source_hilbert_beamformer_contrast_grand_average_simnibs(
+            fname.source_hilbert_beamformer_contrast_grand_average(
                                 subject=subject, date=date,
                                 fmin=fmin, fmax=fmax,
                                 tmin=hilbert_tmin, tmax=hilbert_tmax,
@@ -57,14 +79,25 @@ def this_function(subject, date, overwrite):
                             subject_counter = 0
                             for recording_index, recording in enumerate(recordings):
                                 subject_name = recording['subject']
-                                if subject_name in bad_subjects or \
-                                    subject_name in subjects_with_no_BEM_simnibs:
+                                if subject_name in bad_subjects:# or \
+                                    # subject_name in subjects_with_no_BEM_simnibs:
                                     continue # skip the subject
                                 subject_counter += 1
                                 subject_date = recording['date']
                                 
                                 lcmv = mne.read_source_estimate(
-                                fname.source_hilbert_beamformer_simnibs_morph(
+                                # fname.source_hilbert_beamformer_simnibs_morph(
+                                #         subject=subject_name, date=subject_date,
+                                #         fmin=fmin, fmax=fmax,
+                                #         tmin=hilbert_tmin,
+                                #         tmax=hilbert_tmax,
+                                #         reg=hilbert_lcmv_regularization, 
+                                #         event=event,
+                                #         first_event=first_event,
+                                #         second_event=second_event,
+                                #         weight_norm=hilbert_lcmv_weight_norm,
+                                #         n_layers=3))
+                                fname.source_hilbert_beamformer_morph(
                                         subject=subject_name, date=subject_date,
                                         fmin=fmin, fmax=fmax,
                                         tmin=hilbert_tmin,
@@ -74,7 +107,7 @@ def this_function(subject, date, overwrite):
                                         first_event=first_event,
                                         second_event=second_event,
                                         weight_norm=hilbert_lcmv_weight_norm,
-                                        n_layers=3))
+                                        n_layers=1))
                         
                                 ## single grand averages
                                 if recording_index == 0:
@@ -127,9 +160,9 @@ def this_function(subject, date, overwrite):
                 # ratio.save(ratio_output_name, ftype='h5')
                 
 if submitting_method == 'hyades_frontend':
-    queue = 'highmem_short.q'
+    queue = 'long.q'
     job_name = 'hlcmvga'
-    n_jobs = 2
+    n_jobs = 4
     deps = ['eve', 'hfilt', 'hepo', 'have', 'mri', 'ana', 'fwd', 'hlcmv',
             'hmlcmv']
     

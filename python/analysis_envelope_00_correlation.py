@@ -20,9 +20,12 @@ import mne_connectivity
 import numpy as np
 
 def this_function(subject, date, overwrite):
-    bem_conductivity = bem_conductivities[1]
+    # bem_conductivity = bem_conductivities[1]
+    bem_conductivity = bem_conductivities[0]
     n_layers = len(bem_conductivity)
-    morph = mne.read_source_morph(fname.anatomy_simnibs_morph_volume(
+    # morph = mne.read_source_morph(fname.anatomy_simnibs_morph_volume(
+        # subject=subject, spacing=src_spacing))
+    morph = mne.read_source_morph(fname.anatomy_morph_volume(
         subject=subject, spacing=src_spacing))
     for (fmin, fmax) in zip(envelope_fmins, envelope_fmaxs):
         raw_loaded = False
@@ -122,8 +125,10 @@ def this_function(subject, date, overwrite):
                                                          date=date)
                     src = fname.anatomy_volumetric_source_space(
                         subject=subject, spacing=src_spacing)
-                    bem = fname.anatomy_simnibs_bem_solutions(
-                        subject=subject, n_layers=n_layers)
+                    # bem = fname.anatomy_simnibs_bem_solutions(
+                    #     subject=subject, n_layers=n_layers)
+                    bem = fname.anatomy_bem_solutions(
+                        subject=subject, n_layers=n_layers, ico=4)
                     
                     fwd = mne.make_forward_solution(epochs_cov.info, trans,
                                                     src, bem)

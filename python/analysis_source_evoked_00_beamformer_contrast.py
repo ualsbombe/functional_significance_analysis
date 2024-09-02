@@ -31,35 +31,35 @@ def this_function(subject, date, overwrite):
                 n_layers = len(bem_conductivity)
                 output_names = list()
            
-                output_names.append(
-                    fname.source_evoked_beamformer_contrast_simnibs(
-                                    subject=subject,
-                                    date=date,
-                                    fmin=evoked_fmin,
-                                    fmax=evoked_fmax,
-                                    tmin=evoked_tmin,
-                                    tmax=evoked_tmax,
-                                    first_event=this_contrast[0],
-                                    second_event=this_contrast[1],
-                                    reg=evoked_lcmv_regularization,
-                                    weight_norm=evoked_lcmv_weight_norm,
-                                    n_layers=n_layers
-                                        ))
+                # output_names.append(
+                #     fname.source_evoked_beamformer_contrast_simnibs(
+                #                     subject=subject,
+                #                     date=date,
+                #                     fmin=evoked_fmin,
+                #                     fmax=evoked_fmax,
+                #                     tmin=evoked_tmin,
+                #                     tmax=evoked_tmax,
+                #                     first_event=this_contrast[0],
+                #                     second_event=this_contrast[1],
+                #                     reg=evoked_lcmv_regularization,
+                #                     weight_norm=evoked_lcmv_weight_norm,
+                #                     n_layers=n_layers
+                #                         ))
                 
-                # output_names.append( 
-                #     fname.source_evoked_beamformer_contrast(
-                #                         subject=subject,
-                #                         date=date,
-                #                         fmin=evoked_fmin,
-                #                         fmax=evoked_fmax,
-                #                         tmin=evoked_tmin,
-                #                         tmax=evoked_tmax,
-                #                         first_event=this_contrast[0],
-                #                         second_event=this_contrast[1],
-                #                         reg=evoked_lcmv_regularization,
-                #                         weight_norm=evoked_lcmv_weight_norm,
-                #                         n_layers=n_layers
-                #                             ))
+                output_names.append( 
+                    fname.source_evoked_beamformer_contrast(
+                                        subject=subject,
+                                        date=date,
+                                        fmin=evoked_fmin,
+                                        fmax=evoked_fmax,
+                                        tmin=evoked_tmin,
+                                        tmax=evoked_tmax,
+                                        first_event=this_contrast[0],
+                                        second_event=this_contrast[1],
+                                        reg=evoked_lcmv_regularization,
+                                        weight_norm=evoked_lcmv_weight_norm,
+                                        n_layers=n_layers
+                                            ))
                 for output_name in output_names:
                     if should_we_run(output_name, overwrite):
                         if not raw_loaded:

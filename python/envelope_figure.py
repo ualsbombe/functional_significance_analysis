@@ -46,13 +46,10 @@ def get_data_array(fmin, fmax, tmin, tmax, event, data):
     indices = list()
     for recording_index, recording in enumerate(recordings[:]):
         subject = recording['subject']
-        # if subject == '0005' or subject == '0008' or subject == '0015' or \
-        #     subject == '0016' or subject == '0017' or subject == '0018':
-        #     continue
         if subject in bad_subjects:
             continue
-        if subject in subjects_with_no_BEM_simnibs:
-            continue
+        # if subject in subjects_with_no_BEM_simnibs:
+            # continue
         date    = recording['date']
         first_event = event[0] + '0'
         second_event = event[0] + '15'
@@ -61,7 +58,7 @@ def get_data_array(fmin, fmax, tmin, tmax, event, data):
                    subject=subject, date=date, fmin=fmin, fmax=fmax,
                    tmin=tmin, tmax=tmax, reg=0.00,
                    weight_norm='unit-noise-gain-invariant',
-                   event=event, n_layers=3,
+                   event=event, n_layers=1, # 3
                    first_event=first_event, second_event=second_event)
         
         print('Loading subject: ' + subject)
@@ -165,11 +162,11 @@ beta_o15 = beta_o15[indices, :, :]
 
 #%% FULL LABEL DICT
 stc_full_path = \
-        fname.source_hilbert_beamformer_grand_average_simnibs(
+        fname.source_hilbert_beamformer_grand_average(
             subject='fsaverage', date='20210825_000000', fmin=14, fmax=30,
             tmin=-0.750, tmax=0.750, reg=0.00,
             event='o0', first_event='o0', second_event='o15',
-            weight_norm='unit-noise-gain-invariant', n_layers=3)
+            weight_norm='unit-noise-gain-invariant', n_layers=1)
 stc = mne.read_source_estimate(stc_full_path)
 src = mne.read_source_spaces(fname.anatomy_volumetric_source_space(
                             subject='fsaverage', spacing=7.5))
@@ -217,7 +214,7 @@ vertex_indices = find_label_vertices(stc, label_dict, stc_full_path, src)
 
 #%% ANOTHER T TRY
 
-def get_sig (a1, a2, seed, atlas, vertex_indices, n=26):
+def get_sig (a1, a2, seed, atlas, vertex_indices, n=28):
     
     ts = list()
     values = dict()
@@ -270,27 +267,34 @@ def print_ps(ps):
         if ps[roi] < 0.05:
             print(roi)
             print(ps[roi])
-            
+                   
+# ts_w_theta, values_w_theta = get_sig(theta_w0, theta_w15, 'Cerebelum_6_L', atlas, all_vertex_indices)
+# ts_o_theta, values_o_theta = get_sig(theta_o0, theta_o15, 'Cerebelum_6_L', atlas, all_vertex_indices)
 
-        
-# ts = print_sig(theta_w0, theta_w15, 'Cerebelum_6_L', atlas, all_vertex_indices)
 # ps = get_ps(ts, 0.05, 24)
 # ts = print_sig(theta_o0, theta_o15, 'Cerebelum_6_L', atlas)
 
 # ts_sub_L = print_sig(theta_w0, theta_w15, 'Cerebelum_6_L', atlas, vertex_indices)
 
 
-ts_w, values_w = get_sig(beta_w0, beta_w15, 'Cerebelum_6_L', atlas, all_vertex_indices)
-# ts_sub_w, diff = get_sig(beta_w0, beta_w15, 'Cerebelum_6_L', atlas, vertex_indices)
-# ts_sub_R = print_sig(beta_w0, beta_w15, 'Cerebelum_6_R', atlas, all_vertex_indices)
-# lala = print_sig(beta_w0, beta_w15, 'Thalamus_R', atlas, vertex_indices)
+# ts_w, values_w = get_sig(beta_w0, beta_w15, 'Cerebelum_6_L', atlas, all_vertex_indices)
+# ts_o, values_o = get_sig(beta_o0, beta_o15, 'Cerebelum_6_L', atlas, all_vertex_indices)
 
-ts_o, values_o = get_sig(beta_o0, beta_o15, 'Cerebelum_6_L', atlas, all_vertex_indices)
+
+# ts_w, values_w = get_sig(beta_w0, beta_w15, 'Thalamus_L', atlas, all_vertex_indices)
+# ts_o, values_o = get_sig(beta_o0, beta_o15, 'Thalamus_L', atlas, all_vertex_indices)
+# ts_w, values_w = get_sig(beta_w0, beta_w15, 'Thalamus_R', atlas, all_vertex_indices)
+# ts_o, values_o = get_sig(beta_o0, beta_o15, 'Thalamus_R', atlas, all_vertex_indices)
+
+ts_w, values_w = get_sig(beta_w0, beta_w15, 'Cerebelum_Crus1_L', atlas, all_vertex_indices)
+ts_o, values_o = get_sig(beta_o0, beta_o15, 'Cerebelum_Crus1_L', atlas, all_vertex_indices)
+
 
 print('weak beta')
-print_ps(get_ps(ts_w, 0.05, 26))
+print_ps(get_ps(ts_w, 0.05, 28))
 print('\nomission beta')
-print_ps(get_ps(ts_o, 0.05, 26))
+print_ps(get_ps(ts_o, 0.05, 28))
+
     
     
 #%% ANOVA
@@ -316,6 +320,7 @@ def do_anova(values_w, values_o, roi, plot=True, handle_nans=False):
     
     model = ols('envelope_correlation ~ C(stimulation) + C(regularity) + ' + \
                 'C(stimulation):C(regularity)', data=dt)
+
     model = model.fit()
     print(sm.stats.anova_lm(model, typ=2))
     print(model.summary())
@@ -385,14 +390,15 @@ def do_anova(values_w, values_o, roi, plot=True, handle_nans=False):
             plt.title(roi)
         plt.show()
         fig.savefig(join(fig_path,
-                         'envelope_ANOVA_' + roi + '.png'), dpi=300)
+                         'envelope_freesurfer_ANOVA_' + roi + '.png'), dpi=300)
     
 
+# do_anova(values_w, values_o, 'Cerebelum_Crus1_L')
 do_anova(values_w, values_o, 'Thalamus_R')
-do_anova(values_w, values_o, 'Thalamus_L')
 # do_anova(values_w, values_o, 'Precentral_L', handle_nans=True)
 # do_anova(values_w, values_o, 'Postcentral_R', handle_nans=True)
 # do_anova(values_w, values_o, 'Insula_R', handle_nans=False)
+# do_anova(values_w_theta, values_o_theta, 'Pallidum_L')
 
 
 #%% all plots
@@ -417,8 +423,7 @@ def read_subject_slopes_csv(path, bad_subjects, subjects_with_no_BEM_simnibs):
             if line_index == 0: ## header
                 continue
             subject = line[2]
-            if subject in bad_subjects or \
-                subject in subjects_with_no_BEM_simnibs:
+            if subject in bad_subjects:
                 weak.append(np.nan)
                 omission.append(np.nan)
                 continue
@@ -509,7 +514,7 @@ def run_correlations(values_w, values_o, behavioural_data, roi, contrast):
     
     return test_array[indices], behavioural_data[indices], r, p
     
-## weak
+#%% weak
 test_array, behavioural_data, rho, p = \
     run_correlations(values_w, values_o, weak, 'Thalamus_L', [1, -1, 0, 0])
 plot_correlation(test_array, behavioural_data, rho, p, 'Weak', 'Thalamus_L',
@@ -530,6 +535,30 @@ test_array, behavioural_data, rho, p = \
     run_correlations(values_w, values_o, omission, 'Thalamus_R', [0, 0, 1, -1])
 plot_correlation(test_array, behavioural_data, rho, p, 'Omission',
                   'Thalamus_R', fig_path)
+
+
+#%% thalamo-cerebellum
+
+test_array, behavioural_data, rho, p = \
+    run_correlations(values_w, values_o, weak, 'Cerebelum_Crus1_L', [1, -1, 0, 0])
+plot_correlation(test_array, behavioural_data, rho, p, 'Weak', 'Cerebelum_Crus1_L',
+                 fig_path)
+
+
+# ## omission
+test_array, behavioural_data, rho, p = \
+    run_correlations(values_w, values_o, omission, 'Cerebelum_Crus1_L', [0, 0, 1, -1])
+plot_correlation(test_array, behavioural_data, rho, p, 'Omission',
+                  'Cerebelum_Crus1_L', fig_path)
+
+
+#%% PALLIDUM CORRELATION
+
+test_array, behavioural_data, rho, p = \
+    run_correlations(values_w_theta, values_o_theta, weak,
+                     'Pallidum_L', [1, -1, 0, 0])
+plot_correlation(test_array, behavioural_data, rho, p, 'Weak', 'Pallidum_L',
+                 fig_path)
 
 # ## interaction
 # test_array, behavioural_data, rho, p = \
@@ -664,7 +693,8 @@ def get_median_stc(a1, a2, seed, vertex_indices, src, ts_dict=None):
         for source_index in range(n_sources):
             for label in vertex_indices:
                 if source_index in vertex_indices[label]:
-                    this_t = ts_dict[label]
+                    these_ts, value = ts_dict
+                    this_t = these_ts[label]
                     if this_t > -cutoff and this_t < cutoff:
                         this_data[source_index] = 0
                     
@@ -708,33 +738,48 @@ mpl.rcParams['font.size'] = 14
 mpl.rcParams['font.weight'] = 'bold'
 plt.close('all')
 
-median_stc = get_median_stc(beta_w0, beta_w15, 'Cerebelum_6_L',
-                            all_vertex_indices, src,
-                            ts_dict=get_sig(beta_w0, beta_w15,
-                                              'Cerebelum_6_L', atlas,
-                                              all_vertex_indices))
-
 # median_stc = get_median_stc(beta_w0, beta_w15, 'Cerebelum_6_L',
 #                             all_vertex_indices, src,
-#                             ts_dict=None)
-fig = median_stc.plot(src, colormap='bwr',
-                clim=dict(kind='value', pos_lims=(0, 0.004, 0.008)),
-                initial_pos=(0.009, -0.023, 0.008))
+#                             ts_dict=get_sig(beta_w0, beta_w15,
+#                                               'Cerebelum_6_L', atlas,
+#                                               all_vertex_indices))
 
-save_T1_plot_only(fig, join(fig_path, 'envelope_beta_weak.png'))
-########
+# # median_stc = get_median_stc(beta_w0, beta_w15, 'Cerebelum_6_L',
+# #                             all_vertex_indices, src,
+# #                             ts_dict=None)
+# fig = median_stc.plot(src, colormap='bwr',
+#                 clim=dict(kind='value', pos_lims=(0, 0.004, 0.008)),
+#                 initial_pos=(0.009, -0.023, 0.008))
+
+# save_T1_plot_only(fig, join(fig_path, 'envelope_beta_weak.png'))
+# ########
 
 
 
-median_stc = get_median_stc(beta_o0, beta_o15, 'Cerebelum_6_L',
+# median_stc = get_median_stc(beta_o0, beta_o15, 'Cerebelum_6_L',
+#                             all_vertex_indices, src,
+#                             ts_dict=get_sig(beta_o0, beta_o15,
+#                                               'Cerebelum_6_L', atlas,
+#                                               all_vertex_indices))
+# fig = median_stc.plot(src, colormap='bwr',
+#                 clim=dict(kind='value', pos_lims=(0, 0.004, 0.008)),
+#                 initial_pos=(0.009, -0.023, 0.008))
+# save_T1_plot_only(fig, join(fig_path, 'envelope_beta_omission.png'))
+
+
+## theta weak
+
+median_stc = get_median_stc(theta_w0, theta_w15, 'Cerebelum_6_L',
                             all_vertex_indices, src,
-                            ts_dict=get_sig(beta_o0, beta_o15,
+                            ts_dict=get_sig(theta_w0, theta_w15,
                                               'Cerebelum_6_L', atlas,
                                               all_vertex_indices))
+
 fig = median_stc.plot(src, colormap='bwr',
                 clim=dict(kind='value', pos_lims=(0, 0.004, 0.008)),
-                initial_pos=(0.009, -0.023, 0.008))
-save_T1_plot_only(fig, join(fig_path, 'envelope_beta_omission.png'))
+                initial_pos=(-0.021, -0.005, 0.003))
+
+save_T1_plot_only(fig, join(fig_path, 'envelope_theta_weak.png'))
 
 
 # #%% FIND NAN MEANS and DIFF
